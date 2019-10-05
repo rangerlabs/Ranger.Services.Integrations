@@ -1,0 +1,20 @@
+language: csharp
+mono: none
+sudo: required
+services:
+    - docker
+branches:
+    only:
+        - master
+        - dev
+before_script:
+    - chmod -R a+x scripts
+script:
+    - './scripts/travis-build.sh'
+after_success:
+    - './scripts/travis-docker-publish.sh'
+notifications:
+    email: false
+    slack:
+        secure: X31J/bLHJT1RTmDppbd1i6ouFsod66aVTkTGpJb2bG5052+ruheIJtKPM/AGbLYzfCFma4RcZALRZUBp0Ezh0a3eYGnCvFwVW9SL0NPph77WB3E6rT2DtieshO7fea7A/dL9QnM/OrkJJvylaS7kR+34WKv9V6O0KiN4GuAd/3lA+6y/36FvNpiAYWF4FdtZw/PkW68oHLzMlsyifPzRuxr7HSQb/e8CnLa4hWuK8rJpvopt6JpkV+F+vpo4SrMV5uhkYYrJuOoTMo95R7+JkJiwk6qQJdJ8WqzMxdl5HnDY5UfP65f6wUwCyDkHJZTtKQ6j//iqQGCQklDR9wjP4KRzSghGPxfS4DU114M++R4M0BPo/YapjZrgmYtIYKcWqAQ5zgApnIwSU846sZbr69dewWda59krAOz+xmrG/wX2O5nUBzRzwy8LHqDGQnda/NyJFr5YKhWQCCwA0QHsAlDoZhNkJIejR8YGA8kGiB5cm2bnV/RX1DXS0m0GsBbhxIgQp7hMruQGzRJ+4C7C7VAvYr+rvOFSNVmfG7emIiuJXI6sbctiKE1pofdm4qv/daYhhPQVwloL0hmHbxfF1j9aSE+FIfwlN+XAjNu9gvGRRiCwBO4RYkKUY5P+15OIjfAYtvqpV6kKVEe1xAOApn1avsZf1AQJsOLES8aePTk=
+        on_pull_requests: false

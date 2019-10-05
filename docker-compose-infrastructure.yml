@@ -1,0 +1,23 @@
+version: '3.5'
+services:
+    postgres:
+        image: postgres:9.6
+        container_name: integrations_postgres
+        environment:
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
+        ports:
+            - '5432:5432'
+        networks:
+            - integrations
+        volumes:
+            - postgres:/data/db
+
+networks:
+    integrations:
+        name: integrations-network
+        internal: true
+
+volumes:
+    postgres:
+        driver: local

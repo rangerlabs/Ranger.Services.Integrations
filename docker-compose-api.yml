@@ -1,0 +1,19 @@
+version: '3.5'
+services:
+    api:
+        image: ranger.services.integrations:dev
+        container_name: integrations
+        ports:
+            - '8087:8087'
+        networks:
+            - integrations
+            - ranger
+
+networks:
+    ranger:
+        name: ranger-network
+        external: true
+
+    projects:
+        name: integrations-network
+        external: true

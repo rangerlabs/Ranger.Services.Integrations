@@ -1,0 +1,1 @@
+dotnet ef database update -p ./src/Ranger.Services.Integrations.Data/Ranger.Services.Integrations.Data.csproj -c IntegrationsDbContext -s ./src/Ranger.Services.Integrations/Ranger.Services.Integrations.csproj 
