@@ -31,7 +31,7 @@ namespace Ranger.Services.Integrations
             using (var scope = host.Services.CreateScope())
             {
                 var dbInitializer = scope.ServiceProvider.GetRequiredService<IIntegrationsDbContextInitializer>();
-                var env = scope.ServiceProvider.GetRequiredService<IHostingEnvironment>();
+                var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
 
                 dbInitializer.Migrate();
                 dbInitializer.EnsureRowLevelSecurityApplied();
