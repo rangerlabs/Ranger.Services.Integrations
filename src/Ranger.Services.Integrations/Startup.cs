@@ -95,10 +95,15 @@ namespace Ranger.Services.Integrations
         public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime, ILoggerFactory loggerFactory)
         {
             this.loggerFactory = loggerFactory;
-
             applicationLifetime.ApplicationStopping.Register(OnShutdown);
+
+            app.UseRouting();
             app.UseAuthentication();
-            app.UseMvcWithDefaultRoute();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
+
             this.busSubscriber = app.UseRabbitMQ()
                 .SubscribeCommand<InitializeTenant>((c, e) =>
                    new InitializeTenantRejected(e.Message, "")

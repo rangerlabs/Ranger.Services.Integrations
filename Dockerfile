@@ -1,7 +1,6 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build-env
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS restore
 WORKDIR /app
 
-ARG MYGET_API_KEY
 ARG BUILD_CONFIG="Release"
 
 RUN mkdir -p /app/vsdbg && touch /app/vsdbg/touched
@@ -14,18 +13,25 @@ RUN if [ "${BUILD_CONFIG}" = "Debug" ]; then \
     fi
 ENV DEBIAN_FRONTEND teletype
 
+ARG MYGET_API_KEY
+
 COPY *.sln ./
-COPY ./src ./src
-COPY ./test ./test
+COPY ./src/Ranger.Services.Integrations/Ranger.Services.Integrations.csproj ./src/Ranger.Services.Integrations/Ranger.Services.Integrations.csproj
+COPY ./src/Ranger.Services.Integrations.Data/Ranger.Services.Integrations.Data.csproj ./src/Ranger.Services.Integrations.Data/Ranger.Services.Integrations.Data.csproj
 COPY ./scripts ./scripts
 
 RUN ./scripts/create-nuget-config.sh ${MYGET_API_KEY}
-RUN dotnet publish -c ${BUILD_CONFIG} -o /app/published 
+RUN dotnet restore
+
+COPY ./src ./src
+COPY ./test ./test
+
+RUN dotnet publish -c ${BUILD_CONFIG} -o /app/published --no-restore
 
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
 WORKDIR /app
-COPY --from=build-env /app/published .
-COPY --from=build-env /app/vsdbg ./vsdbg
+COPY --from=restore /app/published .
+COPY --from=restore /app/vsdbg ./vsdbg
 
 ARG BUILD_CONFIG="Release"
 ARG ASPNETCORE_ENVIRONMENT="Production"
@@ -38,5 +44,5 @@ RUN if [ "${BUILD_CONFIG}" = "Debug" ]; then \
     fi
 ENV DEBIAN_FRONTEND teletype
 
-EXPOSE 8087
+EXPOSE 8086
 ENTRYPOINT ["dotnet", "Ranger.Services.Integrations.dll"]
