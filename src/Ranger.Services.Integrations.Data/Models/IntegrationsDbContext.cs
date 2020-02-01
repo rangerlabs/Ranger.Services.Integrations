@@ -17,6 +17,8 @@ namespace Ranger.Services.Integrations.Data
         }
 
         public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
+        public DbSet<IntegrationStream> IntegrationStreams { get; set; }
+        public DbSet<IntegrationUniqueConstraint> IntegrationUniqueConstraints { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -58,6 +60,9 @@ namespace Ranger.Services.Integrations.Data
 
                 encryptionHelper?.SetEncrytedPropertyAccessMode(entity);
             }
+
+            modelBuilder.Entity<IntegrationUniqueConstraint>().HasIndex(_ => new { _.DatabaseUsername, _.ProjectId }).IsUnique();
+            modelBuilder.Entity<IntegrationUniqueConstraint>().HasIndex(_ => new { _.ProjectId, _.Name }).IsUnique();
         }
     }
 }
