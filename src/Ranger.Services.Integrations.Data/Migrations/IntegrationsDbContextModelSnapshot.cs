@@ -115,7 +115,7 @@ namespace Ranger.Services.Integrations.Data.Migrations
                     b.HasKey("IntegrationId")
                         .HasName("pk_integration_unique_constraints");
 
-                    b.HasIndex("DatabaseUsername", "ProjectId")
+                    b.HasIndex("DatabaseUsername", "IntegrationId")
                         .IsUnique();
 
                     b.HasIndex("ProjectId", "Name")

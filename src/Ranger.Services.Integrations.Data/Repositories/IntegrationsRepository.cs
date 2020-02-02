@@ -72,7 +72,7 @@ namespace Ranger.Services.Integrations.Data
                     {
                         case IntegrationJsonbConstraintNames.Name:
                             {
-                                throw new EventStreamDataConstraintException("The integration name is in use by another integration.");
+                                throw new EventStreamDataConstraintException($"The integration name '{integration.Name}' is in use by another integration.");
                             }
                         default:
                             {
@@ -84,41 +84,41 @@ namespace Ranger.Services.Integrations.Data
             }
         }
 
-        public async Task<IEnumerable<(IIntegration integration, int version)>> GetAllIntegrationsForProject(Guid projectId)
+        public async Task<IEnumerable<(IIntegration integration, IntegrationsEnum integrationType, int version)>> GetAllIntegrationsForProject(Guid projectId)
         {
             var IntegrationStreams = await this.context.IntegrationStreams.
             FromSqlInterpolated($@"
                 WITH not_deleted AS(
 	                SELECT 
-            	    	is.id,
-            	    	is.database_username,
-            	    	is.stream_id,
-            	    	is.version,
-            	    	is.data,
-                        is.integration_type,
-            	    	is.event,
-            	    	is.inserted_at,
-            	    	is.inserted_by
-            	    FROM integration_streams is, integration_unique_constraints iuc
-            	    WHERE iuc.ProjectId = {projectId.ToString()} AND (is.data ->> 'IntegrationId') = iuc.integration_id::text
+            	    	i.id,
+            	    	i.database_username,
+            	    	i.stream_id,
+            	    	i.version,
+            	    	i.data,
+                        i.integration_type,
+            	    	i.event,
+            	    	i.inserted_at,
+            	    	i.inserted_by
+            	    FROM integration_streams i, integration_unique_constraints iuc
+            	    WHERE iuc.project_id = {projectId} AND (i.data ->> 'Id') = iuc.integration_id::text
                )
-               SELECT DISTINCT ON (is.stream_id) 
-              		is.id,
-              		is.database_username,
-              		is.stream_id,
-              		is.version,
-                    is.data,
-                    is.integration_type,
-            		is.event,
-            		is.inserted_at,
-            		is.inserted_by
-                FROM not_deleted is
-                ORDER BY is.stream_id, is.version DESC;").ToListAsync();
-            List<(IIntegration integration, int version)> integrationVersionTuples = new List<(IIntegration integration, int version)>();
+               SELECT DISTINCT ON (i.stream_id) 
+              		i.id,
+              		i.database_username,
+              		i.stream_id,
+              		i.version,
+                    i.data,
+                    i.integration_type,
+            		i.event,
+            		i.inserted_at,
+            		i.inserted_by
+                FROM not_deleted i
+                ORDER BY i.stream_id, i.version DESC;").ToListAsync();
+            List<(IIntegration integration, IntegrationsEnum IntegrationType, int version)> integrationVersionTuples = new List<(IIntegration integration, IntegrationsEnum integrationType, int version)>();
             foreach (var integrationStream in IntegrationStreams)
             {
-                var (integration, _) = IntegrationMessageTypeFactory.Factory(integrationStream.IntegrationType, null);
-                integrationVersionTuples.Add((integration, integrationStream.Version));
+                var integration = IntegrationMessageFactory.Factory(integrationStream.IntegrationType, integrationStream.Data);
+                integrationVersionTuples.Add((integration, integrationStream.IntegrationType, integrationStream.Version));
             }
             return integrationVersionTuples;
         }
@@ -126,7 +126,7 @@ namespace Ranger.Services.Integrations.Data
         public async Task<IIntegration> GetIntegrationByIntegrationIdAsync(Guid projectId, Guid integrationId)
         {
             var integrationStream = await this.context.IntegrationStreams.FromSqlInterpolated($"SELECT * FROM integration_streams WHERE data ->> 'ProjectId' = {projectId.ToString()} AND data ->> 'IntegrationId' = {integrationId.ToString()} AND data ->> 'Deleted' = 'false' ORDER BY version DESC").FirstOrDefaultAsync();
-            var (_, type) = IntegrationMessageTypeFactory.Factory(integrationStream.IntegrationType, null);
+            var type = IntegrationTypeFactory.Factory(integrationStream.IntegrationType);
             return JsonConvert.DeserializeObject(integrationStream.Data, type) as IIntegration;
         }
 
@@ -161,7 +161,7 @@ namespace Ranger.Services.Integrations.Data
             var currentIntegrationStream = await GetIntegrationStreamByIntegrationIdAsync(projectId, integrationId);
             if (!(currentIntegrationStream is null))
             {
-                var (currentIntegration, _) = IntegrationMessageTypeFactory.Factory(currentIntegrationStream.IntegrationType, currentIntegrationStream.Data);
+                var currentIntegration = IntegrationMessageFactory.Factory(currentIntegrationStream.IntegrationType, currentIntegrationStream.Data);
                 currentIntegration.Deleted = true;
 
                 var deleted = false;
@@ -235,7 +235,7 @@ namespace Ranger.Services.Integrations.Data
             var currentIntegrationStream = await GetIntegrationStreamByIntegrationIdAsync(projectId, integration.Id);
             ValidateRequestVersionIncremented(version, currentIntegrationStream);
 
-            var (outdatedIntegration, _) = IntegrationMessageTypeFactory.Factory(currentIntegrationStream.IntegrationType, currentIntegrationStream.Data);
+            var outdatedIntegration = IntegrationMessageFactory.Factory(currentIntegrationStream.IntegrationType, currentIntegrationStream.Data);
             integration.Deleted = false;
 
             var serializedNewIntegrationData = JsonConvert.SerializeObject(integration);

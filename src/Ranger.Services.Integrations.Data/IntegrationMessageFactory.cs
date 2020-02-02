@@ -4,15 +4,18 @@ using Ranger.Common.SharedKernel;
 
 namespace Ranger.Services.Integrations.Data
 {
-    public static class IntegrationTypeFactory
+    public static class IntegrationMessageFactory
     {
-        public static Type Factory(IntegrationsEnum integrationType)
+        public static IIntegration Factory(IntegrationsEnum integrationType, string jsonContent)
         {
             switch (integrationType)
             {
                 case IntegrationsEnum.WEBHOOK:
                     {
-                        return typeof(WebhookIntegration);
+                        var integration = JsonConvert.DeserializeObject<WebhookIntegration>(jsonContent);
+                        integration.HeadersJson = integration.HeadersJson ?? "[]";
+                        integration.MetadataJson = integration.MetadataJson ?? "[]";
+                        return integration;
                     }
                 default:
                     {

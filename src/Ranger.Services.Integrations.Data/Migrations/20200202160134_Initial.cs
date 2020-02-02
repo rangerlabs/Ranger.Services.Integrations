@@ -57,9 +57,9 @@ namespace Ranger.Services.Integrations.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_integration_unique_constraints_database_username_project_id",
+                name: "IX_integration_unique_constraints_database_username_integratio~",
                 table: "integration_unique_constraints",
-                columns: new[] { "database_username", "project_id" },
+                columns: new[] { "database_username", "integration_id" },
                 unique: true);
 
             migrationBuilder.CreateIndex(

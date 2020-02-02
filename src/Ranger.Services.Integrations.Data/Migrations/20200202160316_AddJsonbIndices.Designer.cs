@@ -10,7 +10,7 @@ using Ranger.Services.Integrations.Data;
 namespace Ranger.Services.Integrations.Data.Migrations
 {
     [DbContext(typeof(IntegrationsDbContext))]
-    [Migration("20200131204228_AddJsonbIndices")]
+    [Migration("20200202160316_AddJsonbIndices")]
     partial class AddJsonbIndices
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -117,7 +117,7 @@ namespace Ranger.Services.Integrations.Data.Migrations
                     b.HasKey("IntegrationId")
                         .HasName("pk_integration_unique_constraints");
 
-                    b.HasIndex("DatabaseUsername", "ProjectId")
+                    b.HasIndex("DatabaseUsername", "IntegrationId")
                         .IsUnique();
 
                     b.HasIndex("ProjectId", "Name")

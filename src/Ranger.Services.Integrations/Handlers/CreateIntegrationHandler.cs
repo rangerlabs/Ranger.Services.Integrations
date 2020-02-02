@@ -26,7 +26,6 @@ namespace Ranger.Services.Integrations.Handlers
             this.logger = logger;
         }
 
-
         public async Task HandleAsync(CreateIntegration command, ICorrelationContext context)
         {
             var repo = integrationsRepository.Invoke(command.Domain);
@@ -34,7 +33,9 @@ namespace Ranger.Services.Integrations.Handlers
             IIntegration integration;
             try
             {
-                (integration, _) = IntegrationMessageTypeFactory.Factory(command.IntegrationType, command.MessageJsonContent);
+                integration = IntegrationMessageFactory.Factory(command.IntegrationType, command.MessageJsonContent);
+                integration.Id = Guid.NewGuid();
+                integration.ProjectId = command.ProjectId;
             }
             catch (Exception ex)
             {
@@ -49,6 +50,7 @@ namespace Ranger.Services.Integrations.Handlers
             }
             catch (EventStreamDataConstraintException ex)
             {
+                logger.LogWarning(ex.Message);
                 throw new RangerException(ex.Message);
             }
             catch (Exception ex)

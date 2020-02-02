@@ -7,7 +7,7 @@ namespace Ranger.Services.Integrations
     [MessageNamespaceAttribute("integrations")]
     public class CreateIntegration : ICommand
     {
-        public CreateIntegration(string domain, string commandingUserEmail, string messageJsonContent, IntegrationsEnum integrationType)
+        public CreateIntegration(string domain, string commandingUserEmail, Guid projectId, string messageJsonContent, IntegrationsEnum integrationType)
         {
             if (string.IsNullOrWhiteSpace(commandingUserEmail))
             {
@@ -26,11 +26,13 @@ namespace Ranger.Services.Integrations
 
             this.Domain = domain;
             this.CommandingUserEmail = commandingUserEmail;
+            this.ProjectId = projectId;
             this.MessageJsonContent = messageJsonContent;
             this.IntegrationType = integrationType;
         }
         public string Domain { get; }
         public string CommandingUserEmail { get; }
+        public Guid ProjectId { get; }
         public string MessageJsonContent { get; }
         public IntegrationsEnum IntegrationType { get; }
     }
