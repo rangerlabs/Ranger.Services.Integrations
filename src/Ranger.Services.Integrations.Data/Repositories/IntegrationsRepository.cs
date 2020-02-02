@@ -19,7 +19,6 @@ namespace Ranger.Services.Integrations.Data
     {
         private readonly ContextTenant contextTenant;
         private readonly IntegrationsDbContext context;
-        private readonly CloudSqlOptions cloudSqlOptions;
         private readonly ILogger<IntegrationsRepository> logger;
 
         public IntegrationsRepository(ContextTenant contextTenant, IntegrationsDbContext context, ILogger<IntegrationsRepository> logger)
