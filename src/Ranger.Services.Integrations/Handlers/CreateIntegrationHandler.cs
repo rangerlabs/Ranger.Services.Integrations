@@ -30,23 +30,24 @@ namespace Ranger.Services.Integrations.Handlers
         {
             var repo = integrationsRepository.Invoke(command.Domain);
 
-            IIntegration integration;
+            IIntegration entityIntegration;
             try
             {
-                integration = IntegrationMessageFactory.Factory(command.IntegrationType, command.MessageJsonContent);
-                integration.Id = Guid.NewGuid();
-                integration.ProjectId = command.ProjectId;
+                var domainIntegration = JsonToDomainFactory.Factory(command.IntegrationType, command.MessageJsonContent);
+                entityIntegration = DomainToEntityFactory.Factory(domainIntegration);
+                entityIntegration.Id = Guid.NewGuid();
+                entityIntegration.ProjectId = command.ProjectId;
             }
-            catch (Exception ex)
+            catch (JsonSerializationException ex)
             {
                 logger.LogError(ex, "Failed to instantiate the integration from the type and message content provided.");
-                throw new RangerException("Failed to create the integration. No additional data could be provided.");
+                throw new RangerException($"Failed to create the integration. The requested integration was malformed.");
             }
 
             try
             {
-                await repo.AddIntegrationAsync(command.CommandingUserEmail, "IntegrationCreated", integration, command.IntegrationType);
-                busPublisher.Publish(new IntegrationCreated(command.Domain, integration.Name, integration.Id), CorrelationContext.FromId(context.CorrelationContextId));
+                await repo.AddIntegrationAsync(command.CommandingUserEmail, "IntegrationCreated", entityIntegration, command.IntegrationType);
+                busPublisher.Publish(new IntegrationCreated(command.Domain, entityIntegration.Name, entityIntegration.Id), CorrelationContext.FromId(context.CorrelationContextId));
             }
             catch (EventStreamDataConstraintException ex)
             {

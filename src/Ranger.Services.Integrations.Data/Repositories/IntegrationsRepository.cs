@@ -116,8 +116,8 @@ namespace Ranger.Services.Integrations.Data
             List<(IIntegration integration, IntegrationsEnum IntegrationType, int version)> integrationVersionTuples = new List<(IIntegration integration, IntegrationsEnum integrationType, int version)>();
             foreach (var integrationStream in IntegrationStreams)
             {
-                var integration = IntegrationMessageFactory.Factory(integrationStream.IntegrationType, integrationStream.Data);
-                integrationVersionTuples.Add((integration, integrationStream.IntegrationType, integrationStream.Version));
+                var integration = JsonToEntityFactory.Factory(integrationStream.IntegrationType, integrationStream.Data);
+                integrationVersionTuples.Add((EntityToDomainFactory.Factory(integration), integrationStream.IntegrationType, integrationStream.Version));
             }
             return integrationVersionTuples;
         }
@@ -125,7 +125,7 @@ namespace Ranger.Services.Integrations.Data
         public async Task<IIntegration> GetIntegrationByIntegrationIdAsync(Guid projectId, Guid integrationId)
         {
             var integrationStream = await this.context.IntegrationStreams.FromSqlInterpolated($"SELECT * FROM integration_streams WHERE data ->> 'ProjectId' = {projectId.ToString()} AND data ->> 'IntegrationId' = {integrationId.ToString()} AND data ->> 'Deleted' = 'false' ORDER BY version DESC").FirstOrDefaultAsync();
-            var type = IntegrationTypeFactory.Factory(integrationStream.IntegrationType);
+            var type = EntityIntegrationTypeFactory.Factory(integrationStream.IntegrationType);
             return JsonConvert.DeserializeObject(integrationStream.Data, type) as IIntegration;
         }
 
@@ -160,7 +160,7 @@ namespace Ranger.Services.Integrations.Data
             var currentIntegrationStream = await GetIntegrationStreamByIntegrationIdAsync(projectId, integrationId);
             if (!(currentIntegrationStream is null))
             {
-                var currentIntegration = IntegrationMessageFactory.Factory(currentIntegrationStream.IntegrationType, currentIntegrationStream.Data);
+                var currentIntegration = JsonToEntityFactory.Factory(currentIntegrationStream.IntegrationType, currentIntegrationStream.Data);
                 currentIntegration.Deleted = true;
 
                 var deleted = false;
@@ -234,7 +234,7 @@ namespace Ranger.Services.Integrations.Data
             var currentIntegrationStream = await GetIntegrationStreamByIntegrationIdAsync(projectId, integration.Id);
             ValidateRequestVersionIncremented(version, currentIntegrationStream);
 
-            var outdatedIntegration = IntegrationMessageFactory.Factory(currentIntegrationStream.IntegrationType, currentIntegrationStream.Data);
+            var outdatedIntegration = JsonToEntityFactory.Factory(currentIntegrationStream.IntegrationType, currentIntegrationStream.Data);
             integration.Deleted = false;
 
             var serializedNewIntegrationData = JsonConvert.SerializeObject(integration);

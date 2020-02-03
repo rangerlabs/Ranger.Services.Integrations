@@ -1,10 +1,11 @@
 using System;
 using Newtonsoft.Json;
 using Ranger.Common.SharedKernel;
+using Ranger.Services.Integrations.Data.EntityModels;
 
 namespace Ranger.Services.Integrations.Data
 {
-    public static class IntegrationTypeFactory
+    public static class EntityIntegrationTypeFactory
     {
         public static Type Factory(IntegrationsEnum integrationType)
         {
@@ -12,7 +13,7 @@ namespace Ranger.Services.Integrations.Data
             {
                 case IntegrationsEnum.WEBHOOK:
                     {
-                        return typeof(WebhookIntegration);
+                        return typeof(EntityWebhookIntegration);
                     }
                 default:
                     {

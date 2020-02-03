@@ -1,21 +1,19 @@
 using System;
 using Newtonsoft.Json;
 using Ranger.Common.SharedKernel;
+using Ranger.Services.Integrations.Data.DomainModels;
 
 namespace Ranger.Services.Integrations.Data
 {
-    public static class IntegrationMessageFactory
+    public static class JsonToDomainFactory
     {
-        public static IIntegration Factory(IntegrationsEnum integrationType, string jsonContent)
+        public static IDomainIntegration Factory(IntegrationsEnum integrationType, string jsonContent)
         {
             switch (integrationType)
             {
                 case IntegrationsEnum.WEBHOOK:
                     {
-                        var integration = JsonConvert.DeserializeObject<WebhookIntegration>(jsonContent);
-                        integration.HeadersJson = integration.HeadersJson ?? "[]";
-                        integration.MetadataJson = integration.MetadataJson ?? "[]";
-                        return integration;
+                        return JsonConvert.DeserializeObject<DomainWebhookIntegration>(jsonContent, new JsonSerializerSettings { MissingMemberHandling = MissingMemberHandling.Ignore });
                     }
                 default:
                     {
