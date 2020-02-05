@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -64,9 +65,10 @@ namespace Ranger.Services.Integrations
                     return new TenantsClient("http://tenants:8082", loggerFactory.CreateLogger<TenantsClient>());
                 });
 
-
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddTransient<IIntegrationsDbContextInitializer, IntegrationsDbContextInitializer>();
             services.AddTransient<ILoginRoleRepository<IntegrationsDbContext>, LoginRoleRepository<IntegrationsDbContext>>();
+            services.AddTransient<IIntegrationsRepository, IntegrationsRepository>();
 
             services.AddAuthentication("Bearer")
                 .AddIdentityServerAuthentication(options =>
@@ -74,8 +76,6 @@ namespace Ranger.Services.Integrations
                     options.Authority = "http://identity:5000/auth";
                     options.ApiName = "projectsApi";
 
-                    //TODO: Change these to true
-                    options.EnableCaching = false;
                     options.RequireHttpsMetadata = false;
                 });
 
@@ -88,8 +88,20 @@ namespace Ranger.Services.Integrations
         {
             builder.RegisterInstance<CloudSqlOptions>(configuration.GetOptions<CloudSqlOptions>("cloudSql"));
             builder.RegisterType<IntegrationsDbContext>().InstancePerDependency();
-            builder.RegisterAssemblyTypes(typeof(BaseRepository<>).Assembly).AsClosedTypesOf(typeof(BaseRepository<>)).InstancePerDependency();
-            builder.AddRabbitMq(loggerFactory);
+            builder.RegisterType<TenantServiceDbContext>();
+            builder.Register((c, p) =>
+            {
+                var provider = c.Resolve<TenantServiceDbContext>();
+                var (dbContextOptions, model) = provider.GetDbContextOptions<IntegrationsDbContext>(p.TypedAs<string>());
+                return new IntegrationUniqueConstraintRepository(model, new IntegrationsDbContext(dbContextOptions), c.Resolve<ILogger<IntegrationUniqueConstraintRepository>>());
+            });
+            builder.Register((c, p) =>
+            {
+                var provider = c.Resolve<TenantServiceDbContext>();
+                var (dbContextOptions, model) = provider.GetDbContextOptions<IntegrationsDbContext>(p.TypedAs<string>());
+                return new IntegrationsRepository(model, new IntegrationsDbContext(dbContextOptions), c.Resolve<ILogger<IntegrationsRepository>>());
+            });
+            builder.AddRabbitMq();
         }
 
         public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime, ILoggerFactory loggerFactory)
@@ -107,6 +119,9 @@ namespace Ranger.Services.Integrations
             this.busSubscriber = app.UseRabbitMQ()
                 .SubscribeCommand<InitializeTenant>((c, e) =>
                    new InitializeTenantRejected(e.Message, "")
+                )
+                .SubscribeCommand<CreateIntegration>((c, e) =>
+                    new CreateIntegrationRejected(e.Message, "")
                 );
         }
 

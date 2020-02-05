@@ -16,7 +16,6 @@ namespace Ranger.Services.Integrations.Data.Migrations
             migrationBuilder.Sql(MultiTenantMigrationSql.DropTenantLoginRole());
         }
 
-
         protected override void Down(MigrationBuilder migrationBuilder)
         {
 
