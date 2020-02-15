@@ -124,7 +124,7 @@ namespace Ranger.Services.Integrations.Data
 
         public async Task<IIntegration> GetIntegrationByIntegrationIdAsync(Guid projectId, Guid integrationId)
         {
-            var integrationStream = await this.context.IntegrationStreams.FromSqlInterpolated($"SELECT * FROM integration_streams WHERE data ->> 'ProjectId' = {projectId.ToString()} AND data ->> 'IntegrationId' = {integrationId.ToString()} AND data ->> 'Deleted' = 'false' ORDER BY version DESC").FirstOrDefaultAsync();
+            var integrationStream = await this.context.IntegrationStreams.FromSqlInterpolated($"SELECT * FROM integration_streams WHERE data ->> 'ProjectId' = {projectId.ToString()} AND data ->> 'Id' = {integrationId.ToString()} AND data ->> 'Deleted' = 'false' ORDER BY version DESC").FirstOrDefaultAsync();
             var type = EntityIntegrationTypeFactory.Factory(integrationStream.IntegrationType);
             return JsonConvert.DeserializeObject(integrationStream.Data, type) as IIntegration;
         }
@@ -150,14 +150,14 @@ namespace Ranger.Services.Integrations.Data
             );
         }
 
-        public async Task SoftDeleteAsync(Guid projectId, string userEmail, Guid integrationId)
+        public async Task SoftDeleteAsync(Guid projectId, string userEmail, string name)
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
                 throw new ArgumentException($"{nameof(userEmail)} was null or whitespace.");
             }
 
-            var currentIntegrationStream = await GetIntegrationStreamByIntegrationIdAsync(projectId, integrationId);
+            var currentIntegrationStream = await GetIntegrationStreamByIntegrationNameAsync(projectId, name);
             if (!(currentIntegrationStream is null))
             {
                 var currentIntegration = JsonToEntityFactory.Factory(currentIntegrationStream.IntegrationType, currentIntegrationStream.Data);
@@ -212,7 +212,7 @@ namespace Ranger.Services.Integrations.Data
             }
             else
             {
-                throw new ArgumentException($"No integration was found with id '{integrationId}' in project with id '{projectId}'.");
+                throw new ArgumentException($"No integration was found with name '{name}' in project with id '{projectId}'.");
             }
         }
 
@@ -232,9 +232,14 @@ namespace Ranger.Services.Integrations.Data
             }
 
             var currentIntegrationStream = await GetIntegrationStreamByIntegrationIdAsync(projectId, integration.Id);
+            if (currentIntegrationStream is null)
+            {
+                throw new Exception($"No integration was found for ProjectId '{integration.ProjectId}' and Integration Id '{integration.Id}'.");
+            }
             ValidateRequestVersionIncremented(version, currentIntegrationStream);
 
             var outdatedIntegration = JsonToEntityFactory.Factory(currentIntegrationStream.IntegrationType, currentIntegrationStream.Data);
+            integration.ProjectId = outdatedIntegration.ProjectId;
             integration.Deleted = false;
 
             var serializedNewIntegrationData = JsonConvert.SerializeObject(integration);
@@ -317,7 +322,7 @@ namespace Ranger.Services.Integrations.Data
 
         private async Task<IntegrationStream> GetIntegrationStreamByIntegrationIdAsync(Guid projectId, Guid integrationId)
         {
-            return await this.context.IntegrationStreams.FromSqlInterpolated($"SELECT * FROM integration_streams WHERE data ->> 'ProjectId' = {projectId.ToString()} AND data ->> 'IntegrationId' = {integrationId.ToString()} AND data -> 'Deleted' = 'false' ORDER BY version DESC").FirstOrDefaultAsync();
+            return await this.context.IntegrationStreams.FromSqlInterpolated($"SELECT * FROM integration_streams WHERE data ->> 'ProjectId' = {projectId.ToString()} AND data ->> 'Id' = {integrationId.ToString()} AND data -> 'Deleted' = 'false' ORDER BY version DESC").FirstOrDefaultAsync();
         }
 
         public async Task<IntegrationUniqueConstraint> GetIntegrationUniqueConstraintsByIntegrationIdAsync(Guid projectId, Guid integrationId)
