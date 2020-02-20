@@ -33,20 +33,15 @@ namespace Ranger.Services.Integrations.Handlers
                 await repo.SoftDeleteAsync(command.ProjectId, command.CommandingUserEmail, command.Name);
                 busPublisher.Publish(new IntegrationDeleted(command.Domain, command.Name), CorrelationContext.FromId(context.CorrelationContextId));
             }
-            catch (EventStreamDataConstraintException ex)
-            {
-                logger.LogWarning(ex.Message);
-                throw new RangerException(ex.Message);
-            }
-            catch (NoOpException ex)
+            catch (ConcurrencyException ex)
             {
                 logger.LogWarning(ex.Message);
                 throw new RangerException(ex.Message);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to create an integration.");
-                throw new RangerException("Failed to create the integration. No additional data could be provided.");
+                logger.LogError(ex, "Failed to delete integration.");
+                throw new RangerException("Failed to delete the integration. No additional data could be provided.");
             }
         }
     }
