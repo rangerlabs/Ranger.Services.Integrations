@@ -39,7 +39,7 @@ namespace Ranger.Services.Geofences.Controllers
                 {
                     dynamic integration = new ExpandoObject();
                     integration.Type = Enum.GetName(typeof(IntegrationsEnum), result.integrationType);
-                    foreach (var propertyInfo in result.integration.GetType().GetProperties())
+                    foreach (var propertyInfo in result.integration.GetType().GetProperties().Where(_ => _.Name.ToLowerInvariant() != "deleted"))
                     {
                         ((IDictionary<String, Object>)integration).Add(propertyInfo.Name, propertyInfo.GetValue(result.integration));
                     }

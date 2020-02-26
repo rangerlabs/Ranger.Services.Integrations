@@ -11,14 +11,14 @@ using Ranger.Services.Integrations.Data;
 
 namespace Ranger.Services.Integrations.Handlers
 {
-    public class CreateIntegrationHandler : ICommandHandler<CreateIntegration>
+    public class UpdateIntegrationHandler : ICommandHandler<UpdateIntegration>
     {
         private readonly IBusPublisher busPublisher;
         private readonly ITenantsClient tenantsClient;
         private readonly Func<string, IntegrationsRepository> integrationsRepository;
-        private readonly ILogger<CreateIntegrationHandler> logger;
+        private readonly ILogger<UpdateIntegrationHandler> logger;
 
-        public CreateIntegrationHandler(IBusPublisher busPublisher, Func<string, IntegrationsRepository> integrationsRepository, ITenantsClient tenantsClient, ILogger<CreateIntegrationHandler> logger)
+        public UpdateIntegrationHandler(IBusPublisher busPublisher, Func<string, IntegrationsRepository> integrationsRepository, ITenantsClient tenantsClient, ILogger<UpdateIntegrationHandler> logger)
         {
             this.busPublisher = busPublisher;
             this.integrationsRepository = integrationsRepository;
@@ -26,7 +26,7 @@ namespace Ranger.Services.Integrations.Handlers
             this.logger = logger;
         }
 
-        public async Task HandleAsync(CreateIntegration command, ICorrelationContext context)
+        public async Task HandleAsync(UpdateIntegration command, ICorrelationContext context)
         {
             var repo = integrationsRepository.Invoke(command.Domain);
 
@@ -35,21 +35,24 @@ namespace Ranger.Services.Integrations.Handlers
             {
                 var domainIntegration = JsonToDomainFactory.Factory(command.IntegrationType, command.MessageJsonContent);
                 entityIntegration = DomainToEntityFactory.Factory(domainIntegration);
-                entityIntegration.IntegrationId = Guid.NewGuid();
-                entityIntegration.ProjectId = command.ProjectId;
             }
             catch (JsonSerializationException ex)
             {
                 logger.LogError(ex, "Failed to instantiate the integration from the type and message content provided.");
-                throw new RangerException($"Failed to create the integration. The requested integration was malformed.");
+                throw new RangerException($"Failed to update the integration. The requested integration was malformed.");
             }
 
             try
             {
-                await repo.AddIntegrationAsync(command.CommandingUserEmail, "IntegrationCreated", entityIntegration, command.IntegrationType);
-                busPublisher.Publish(new IntegrationCreated(command.Domain, entityIntegration.Name, entityIntegration.IntegrationId), CorrelationContext.FromId(context.CorrelationContextId));
+                await repo.UpdateIntegrationAsync(command.ProjectId, command.CommandingUserEmail, "IntegrationUpdated", command.Version, entityIntegration);
+                busPublisher.Publish(new IntegrationUpdated(command.Domain, entityIntegration.Name, entityIntegration.IntegrationId), CorrelationContext.FromId(context.CorrelationContextId));
             }
             catch (EventStreamDataConstraintException ex)
+            {
+                logger.LogWarning(ex.Message);
+                throw new RangerException(ex.Message);
+            }
+            catch (NoOpException ex)
             {
                 logger.LogWarning(ex.Message);
                 throw new RangerException(ex.Message);
@@ -57,7 +60,7 @@ namespace Ranger.Services.Integrations.Handlers
             catch (Exception ex)
             {
                 logger.LogError(ex, "Failed to create an integration.");
-                throw new RangerException("Failed to create the integration. No additional data could be provided.");
+                throw new RangerException("Failed to update the integration. No additional data could be provided.");
             }
         }
     }

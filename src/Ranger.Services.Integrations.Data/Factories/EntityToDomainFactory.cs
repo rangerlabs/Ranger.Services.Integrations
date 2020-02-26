@@ -18,7 +18,7 @@ namespace Ranger.Services.Integrations.Data
                     {
                         var domainIntegration = new DomainWebhookIntegration
                         {
-                            Id = e.Id,
+                            IntegrationId = e.IntegrationId,
                             ProjectId = e.ProjectId,
                             Name = e.Name,
                             Environment = e.Environment,

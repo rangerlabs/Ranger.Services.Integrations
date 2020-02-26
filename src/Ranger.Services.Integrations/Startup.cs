@@ -122,6 +122,12 @@ namespace Ranger.Services.Integrations
                 )
                 .SubscribeCommand<CreateIntegration>((c, e) =>
                     new CreateIntegrationRejected(e.Message, "")
+                )
+                .SubscribeCommand<UpdateIntegration>((c, e) =>
+                    new UpdateIntegrationRejected(e.Message, "")
+                )
+                .SubscribeCommand<DeleteIntegration>((c, e) =>
+                    new DeleteIntegrationRejected(e.Message, "")
                 );
         }
 

@@ -16,7 +16,7 @@ namespace Ranger.Services.Integrations.Data
                     {
                         var entityIntegration = new EntityWebhookIntegration
                         {
-                            Id = d.Id,
+                            IntegrationId = d.IntegrationId,
                             ProjectId = d.ProjectId,
                             Name = d.Name,
                             Environment = d.Environment,
