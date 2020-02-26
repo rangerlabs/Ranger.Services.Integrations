@@ -99,7 +99,7 @@ namespace Ranger.Services.Integrations.Data
             	    	i.inserted_at,
             	    	i.inserted_by
             	    FROM integration_streams i, integration_unique_constraints iuc
-            	    WHERE iuc.project_id = {projectId} AND (i.data ->> 'Id') = iuc.integration_id::text
+            	    WHERE iuc.project_id = {projectId} AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
                )
                SELECT DISTINCT ON (i.stream_id) 
               		i.id,
@@ -178,7 +178,7 @@ namespace Ranger.Services.Integrations.Data
                         InsertedAt = DateTime.UtcNow,
                         InsertedBy = userEmail,
                     };
-                    this.context.IntegrationUniqueConstraints.Remove(await this.context.IntegrationUniqueConstraints.Where(_ => _.IntegrationId == currentIntegration.Id).SingleAsync());
+                    this.context.IntegrationUniqueConstraints.Remove(await this.context.IntegrationUniqueConstraints.Where(_ => _.IntegrationId == currentIntegration.IntegrationId).SingleAsync());
                     this.context.IntegrationStreams.Add(updatedIntegrationStream);
                     try
                     {
@@ -231,10 +231,10 @@ namespace Ranger.Services.Integrations.Data
                 throw new ArgumentException($"{nameof(integration)} was null.");
             }
 
-            var currentIntegrationStream = await GetIntegrationStreamByIntegrationIdAsync(projectId, integration.Id);
+            var currentIntegrationStream = await GetIntegrationStreamByIntegrationIdAsync(projectId, integration.IntegrationId);
             if (currentIntegrationStream is null)
             {
-                throw new Exception($"No integration was found for ProjectId '{integration.ProjectId}' and Integration Id '{integration.Id}'.");
+                throw new Exception($"No integration was found for ProjectId '{integration.ProjectId}' and Integration Id '{integration.IntegrationId}'.");
             }
             ValidateRequestVersionIncremented(version, currentIntegrationStream);
 
@@ -245,8 +245,8 @@ namespace Ranger.Services.Integrations.Data
             var serializedNewIntegrationData = JsonConvert.SerializeObject(integration);
             ValidateDataJsonInequality(currentIntegrationStream, serializedNewIntegrationData);
 
-            var uniqueConstraint = await this.GetIntegrationUniqueConstraintsByIntegrationIdAsync(projectId, integration.Id);
-            uniqueConstraint.Name = integration.Name;
+            var uniqueConstraint = await this.GetIntegrationUniqueConstraintsByIntegrationIdAsync(projectId, integration.IntegrationId);
+            uniqueConstraint.Name = integration.Name.ToLowerInvariant();
 
             var updatedIntegrationStream = new IntegrationStream()
             {
@@ -295,7 +295,12 @@ namespace Ranger.Services.Integrations.Data
 
         private async Task<IntegrationStream> GetIntegrationStreamByIntegrationNameAsync(Guid projectId, string name)
         {
-            return await this.context.IntegrationStreams.FromSqlInterpolated($"SELECT * FROM integration_streams WHERE data ->> 'ProjectId' = {projectId.ToString()} AND data ->> 'Name' = {name} AND data ->> 'Deleted' = 'false' ORDER BY version DESC").FirstOrDefaultAsync();
+            var integrationId = (await this.context.IntegrationUniqueConstraints.Where(_ => _.ProjectId == projectId && _.Name == name.ToLowerInvariant()).SingleOrDefaultAsync())?.IntegrationId;
+            if (integrationId is null)
+            {
+                return null;
+            }
+            return await this.context.IntegrationStreams.FromSqlInterpolated($"SELECT * FROM integration_streams WHERE data ->> 'IntegrationId' = {integrationId.ToString()} ORDER BY version DESC").FirstOrDefaultAsync();
         }
 
         private static void ValidateDataJsonInequality(IntegrationStream currentIntegrationStream, string serializedNewIntegrationData)
@@ -322,7 +327,7 @@ namespace Ranger.Services.Integrations.Data
 
         private async Task<IntegrationStream> GetIntegrationStreamByIntegrationIdAsync(Guid projectId, Guid integrationId)
         {
-            return await this.context.IntegrationStreams.FromSqlInterpolated($"SELECT * FROM integration_streams WHERE data ->> 'ProjectId' = {projectId.ToString()} AND data ->> 'Id' = {integrationId.ToString()} AND data -> 'Deleted' = 'false' ORDER BY version DESC").FirstOrDefaultAsync();
+            return await this.context.IntegrationStreams.FromSqlInterpolated($"SELECT * FROM integration_streams WHERE data ->> 'ProjectId' = {projectId.ToString()} AND data ->> 'IntegrationId' = {integrationId.ToString()} AND data -> 'Deleted' = 'false' ORDER BY version DESC").FirstOrDefaultAsync();
         }
 
         public async Task<IntegrationUniqueConstraint> GetIntegrationUniqueConstraintsByIntegrationIdAsync(Guid projectId, Guid integrationId)
@@ -334,10 +339,10 @@ namespace Ranger.Services.Integrations.Data
         {
             var newIntegrationUniqueConstraint = new IntegrationUniqueConstraint
             {
-                IntegrationId = integration.Id,
+                IntegrationId = integration.IntegrationId,
                 DatabaseUsername = contextTenant.DatabaseUsername,
                 ProjectId = integration.ProjectId,
-                Name = integration.Name,
+                Name = integration.Name.ToLowerInvariant(),
             };
             this.context.IntegrationUniqueConstraints.Add(newIntegrationUniqueConstraint);
         }
