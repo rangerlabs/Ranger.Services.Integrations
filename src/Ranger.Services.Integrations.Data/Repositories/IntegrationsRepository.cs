@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 using Npgsql;
 using Ranger.Common;
 using Ranger.Common.Data.Exceptions;
-using Ranger.Common.SharedKernel;
+using Ranger.Common;
 
 namespace Ranger.Services.Integrations.Data
 {

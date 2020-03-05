@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Ranger.Common.SharedKernel;
+using Ranger.Common;
 
 namespace Ranger.Services.Integrations.Data
 {

@@ -1,6 +1,6 @@
 using System;
 using Newtonsoft.Json;
-using Ranger.Common.SharedKernel;
+using Ranger.Common;
 using Ranger.Services.Integrations.Data.DomainModels;
 
 namespace Ranger.Services.Integrations.Data

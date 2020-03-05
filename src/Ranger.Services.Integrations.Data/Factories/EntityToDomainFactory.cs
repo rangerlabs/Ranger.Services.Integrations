@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using Ranger.Common.SharedKernel;
+using Ranger.Common;
 using Ranger.Services.Integrations.Data.DomainModels;
 using Ranger.Services.Integrations.Data.EntityModels;
 

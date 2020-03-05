@@ -1,5 +1,5 @@
 using System;
-using Ranger.Common.SharedKernel;
+using Ranger.Common;
 using Ranger.RabbitMQ;
 
 namespace Ranger.Services.Integrations

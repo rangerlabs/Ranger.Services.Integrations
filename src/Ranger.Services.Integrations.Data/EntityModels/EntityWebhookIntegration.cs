@@ -1,6 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-using Ranger.Common.SharedKernel;
+using Ranger.Common;
 
 namespace Ranger.Services.Integrations.Data.EntityModels
 {

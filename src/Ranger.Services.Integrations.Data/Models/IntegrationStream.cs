@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Ranger.Common;
-using Ranger.Common.SharedKernel;
+using Ranger.Common;
 
 namespace Ranger.Services.Integrations.Data
 {

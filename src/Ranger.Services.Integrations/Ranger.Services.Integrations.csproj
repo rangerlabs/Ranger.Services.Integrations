@@ -23,10 +23,10 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="3.1.1" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="5.0.1" />
-    <PackageReference Include="Ranger.Common" Version="2.2.1" />
-    <PackageReference Include="Ranger.Monitoring" Version="2.0.1" />
-    <PackageReference Include="Ranger.RabbitMQ" Version="2.0.1" />
-    <PackageReference Include="Ranger.InternalHttpClient" Version="2.2.8" />
+    <PackageReference Include="Ranger.Common" Version="2.2.13" />
+    <PackageReference Include="Ranger.Mongo" Version="2.1.0" />
+    <PackageReference Include="Ranger.RabbitMQ" Version="2.1.0" />
+    <PackageReference Include="Ranger.InternalHttpClient" Version="3.1.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Ranger.Services.Integrations.Data\Ranger.Services.Integrations.Data.csproj" />

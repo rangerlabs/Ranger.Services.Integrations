@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Ranger.Common.SharedKernel;
+using Ranger.Common;
 using Ranger.InternalHttpClient;
 using Ranger.Services.Integrations.Data;
 
