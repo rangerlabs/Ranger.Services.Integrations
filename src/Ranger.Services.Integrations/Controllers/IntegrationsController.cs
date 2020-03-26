@@ -27,7 +27,7 @@ namespace Ranger.Services.Geofences.Controllers
         }
 
         [HttpGet("/{domain}/integrations")]
-        public async Task<IActionResult> GetAllGeofences([FromRoute] string domain, [FromQuery] Guid projectId)
+        public async Task<IActionResult> GetAllIntegrations([FromRoute] string domain, [FromQuery] Guid projectId)
         {
             var repo = integrationsRepositoryFactory(domain);
 
