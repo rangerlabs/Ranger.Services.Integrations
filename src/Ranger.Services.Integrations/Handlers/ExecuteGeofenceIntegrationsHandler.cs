@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -10,19 +12,22 @@ namespace Ranger.Services.Integrations.Handlers
     {
         private readonly IBusPublisher busPublisher;
         private readonly ILogger<ExecuteIntegrationsHandler> logger;
-        private readonly IIntegrationsRepository integrationsRepository;
+        private readonly Func<string, IntegrationsRepository> integrationsRepository;
 
-        public ExecuteIntegrationsHandler(IBusPublisher busPublisher, ILogger<ExecuteIntegrationsHandler> logger, IIntegrationsRepository integrationsRepository)
+        public ExecuteIntegrationsHandler(IBusPublisher busPublisher, ILogger<ExecuteIntegrationsHandler> logger, Func<string, IntegrationsRepository> integrationsRepository)
         {
             this.busPublisher = busPublisher;
             this.logger = logger;
             this.integrationsRepository = integrationsRepository;
         }
 
-        public Task HandleAsync(ExecuteGeofenceIntegrations message, ICorrelationContext context)
+        public async Task HandleAsync(ExecuteGeofenceIntegrations message, ICorrelationContext context)
         {
             logger.LogInformation($"Executing integrations. {JsonConvert.SerializeObject(message)}");
-            return Task.CompletedTask;
+            var repo = integrationsRepository.Invoke(message.Domain);
+
+            var projectIntegrations = await repo.GetAllIntegrationsByIdForProject(message.ProjectId, message.GeofenceIntegrationResults.SelectMany(_ => _.IntegrationIds));
+            return;
         }
     }
 }

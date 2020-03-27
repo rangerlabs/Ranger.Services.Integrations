@@ -11,6 +11,7 @@ namespace Ranger.Services.Integrations.Data
         Task RemoveIntegrationStreamAsync(Guid projectId, string name);
         Task SoftDeleteAsync(Guid projectId, string userEmail, string name);
         Task<IEnumerable<(IIntegration integration, IntegrationsEnum integrationType, int version)>> GetAllIntegrationsForProject(Guid projectId);
+        Task<IEnumerable<(IIntegration integration, IntegrationsEnum integrationType)>> GetAllIntegrationsByIdForProject(Guid projectId, IEnumerable<Guid> integrationIds);
         Task<Guid> GetIntegrationIdByCurrentNameAsync(Guid projectId, string name);
         Task<IIntegration> GetIntegrationByIntegrationIdAsync(Guid projectId, Guid integrationId);
         Task<IIntegration> UpdateIntegrationAsync(Guid projectId, string userEmail, string eventName, int version, IIntegration integration);

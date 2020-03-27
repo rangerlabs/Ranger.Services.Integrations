@@ -70,6 +70,9 @@ namespace Ranger.Services.Integrations
             services.AddTransient<ILoginRoleRepository<IntegrationsDbContext>, LoginRoleRepository<IntegrationsDbContext>>();
             services.AddTransient<IIntegrationsRepository, IntegrationsRepository>();
 
+            //Typed Integration HttpClients
+            services.AddHttpClient<WebhookService>();
+
             services.AddAuthentication("Bearer")
                 .AddIdentityServerAuthentication(options =>
                 {
@@ -128,7 +131,8 @@ namespace Ranger.Services.Integrations
                 )
                 .SubscribeCommand<DeleteIntegration>((c, e) =>
                     new DeleteIntegrationRejected(e.Message, "")
-                );
+                )
+                .SubscribeCommand<ExecuteGeofenceIntegrations>();
         }
 
         private void OnShutdown()

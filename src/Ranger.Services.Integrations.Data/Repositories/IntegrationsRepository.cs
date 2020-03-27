@@ -83,6 +83,46 @@ namespace Ranger.Services.Integrations.Data
             }
         }
 
+        public async Task<IEnumerable<(IIntegration integration, IntegrationsEnum integrationType)>> GetAllIntegrationsByIdForProject(Guid projectId, IEnumerable<Guid> integrationIds)
+        {
+            var IntegrationStreams = await this.context.IntegrationStreams.
+            FromSqlInterpolated($@"
+                WITH not_deleted AS(
+	                SELECT 
+            	    	i.id,
+            	    	i.database_username,
+            	    	i.stream_id,
+            	    	i.version,
+            	    	i.data,
+                        i.integration_type,
+            	    	i.event,
+            	    	i.inserted_at,
+            	    	i.inserted_by
+            	    FROM integration_streams i, integration_unique_constraints iuc
+            	    WHERE iuc.project_id = {projectId} AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
+               )
+               SELECT DISTINCT ON (i.stream_id) 
+              		i.id,
+              		i.database_username,
+              		i.stream_id,
+              		i.version,
+                    i.data,
+                    i.integration_type,
+            		i.event,
+            		i.inserted_at,
+            		i.inserted_by
+                FROM not_deleted i
+                WHERE (i.data ->> 'IntegrationId') IN ({String.Join(',', integrationIds)})
+                ORDER BY i.stream_id, i.version DESC;").ToListAsync();
+            var integrationVersionTuples = new List<(IIntegration integration, IntegrationsEnum integrationType)>();
+            foreach (var integrationStream in IntegrationStreams)
+            {
+                var integration = JsonToEntityFactory.Factory(integrationStream.IntegrationType, integrationStream.Data);
+                integrationVersionTuples.Add((EntityToDomainFactory.Factory(integration), integrationStream.IntegrationType));
+            }
+            return integrationVersionTuples;
+        }
+
         public async Task<IEnumerable<(IIntegration integration, IntegrationsEnum integrationType, int version)>> GetAllIntegrationsForProject(Guid projectId)
         {
             var IntegrationStreams = await this.context.IntegrationStreams.
@@ -113,7 +153,7 @@ namespace Ranger.Services.Integrations.Data
             		i.inserted_by
                 FROM not_deleted i
                 ORDER BY i.stream_id, i.version DESC;").ToListAsync();
-            List<(IIntegration integration, IntegrationsEnum IntegrationType, int version)> integrationVersionTuples = new List<(IIntegration integration, IntegrationsEnum integrationType, int version)>();
+            var integrationVersionTuples = new List<(IIntegration integration, IntegrationsEnum integrationType, int version)>();
             foreach (var integrationStream in IntegrationStreams)
             {
                 var integration = JsonToEntityFactory.Factory(integrationStream.IntegrationType, integrationStream.Data);

@@ -5,6 +5,7 @@ using Ranger.RabbitMQ;
 
 namespace Ranger.Services.Integrations
 {
+    [MessageNamespace("integrations")]
     public class ExecuteGeofenceIntegrations : ICommand
     {
         public string Domain { get; }
