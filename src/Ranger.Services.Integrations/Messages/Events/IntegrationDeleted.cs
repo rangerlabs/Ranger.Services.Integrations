@@ -5,21 +5,21 @@ namespace Ranger.Services.Integrations
     [MessageNamespaceAttribute("integrations")]
     public class IntegrationDeleted : IEvent
     {
-        public string Domain { get; }
+        public string TenantId { get; }
         public string Name { get; }
 
-        public IntegrationDeleted(string domain, string name)
+        public IntegrationDeleted(string tenantId, string name)
         {
-            if (string.IsNullOrWhiteSpace(domain))
+            if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new System.ArgumentException($"{nameof(domain)} was null or whitespace.");
+                throw new System.ArgumentException($"{nameof(tenantId)} was null or whitespace.");
             }
             if (string.IsNullOrWhiteSpace(name))
             {
                 throw new System.ArgumentException($"{nameof(name)} was null or whitespace.");
             }
 
-            this.Domain = domain;
+            this.TenantId = tenantId;
             this.Name = name;
         }
     }

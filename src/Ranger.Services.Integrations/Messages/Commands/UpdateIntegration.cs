@@ -7,15 +7,15 @@ namespace Ranger.Services.Integrations
     [MessageNamespaceAttribute("integrations")]
     public class UpdateIntegration : ICommand
     {
-        public UpdateIntegration(string domain, string commandingUserEmail, Guid projectId, string messageJsonContent, IntegrationsEnum integrationType, int version)
+        public UpdateIntegration(string tenantId, string commandingUserEmail, Guid projectId, string messageJsonContent, IntegrationsEnum integrationType, int version)
         {
             if (string.IsNullOrWhiteSpace(commandingUserEmail))
             {
                 throw new ArgumentException($"{nameof(commandingUserEmail)} was null or whitespace.");
             }
-            if (string.IsNullOrEmpty(domain))
+            if (string.IsNullOrEmpty(tenantId))
             {
-                throw new ArgumentException($"{nameof(domain)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace.");
             }
             if (string.IsNullOrEmpty(messageJsonContent))
             {
@@ -26,7 +26,7 @@ namespace Ranger.Services.Integrations
                 throw new ArgumentOutOfRangeException("Version must be a positive integer.");
             }
 
-            this.Domain = domain;
+            this.TenantId = tenantId;
             this.CommandingUserEmail = commandingUserEmail;
             this.ProjectId = projectId;
             this.MessageJsonContent = messageJsonContent;
@@ -34,7 +34,7 @@ namespace Ranger.Services.Integrations
             this.Version = version;
         }
 
-        public string Domain { get; }
+        public string TenantId { get; }
         public string CommandingUserEmail { get; }
         public Guid ProjectId { get; }
         public string MessageJsonContent { get; }

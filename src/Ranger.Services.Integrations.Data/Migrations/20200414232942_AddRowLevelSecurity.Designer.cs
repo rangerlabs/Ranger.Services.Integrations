@@ -10,8 +10,8 @@ using Ranger.Services.Integrations.Data;
 namespace Ranger.Services.Integrations.Data.Migrations
 {
     [DbContext(typeof(IntegrationsDbContext))]
-    [Migration("20200202160134_Initial")]
-    partial class Initial
+    [Migration("20200414232942_AddRowLevelSecurity")]
+    partial class AddRowLevelSecurity
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -56,11 +56,6 @@ namespace Ranger.Services.Integrations.Data.Migrations
                         .HasColumnName("data")
                         .HasColumnType("jsonb");
 
-                    b.Property<string>("DatabaseUsername")
-                        .IsRequired()
-                        .HasColumnName("database_username")
-                        .HasColumnType("text");
-
                     b.Property<string>("Event")
                         .IsRequired()
                         .HasColumnName("event")
@@ -83,6 +78,11 @@ namespace Ranger.Services.Integrations.Data.Migrations
                         .HasColumnName("stream_id")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasColumnName("tenant_id")
+                        .HasColumnType("text");
+
                     b.Property<int>("Version")
                         .HasColumnName("version")
                         .HasColumnType("integer");
@@ -99,11 +99,6 @@ namespace Ranger.Services.Integrations.Data.Migrations
                         .HasColumnName("integration_id")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("DatabaseUsername")
-                        .IsRequired()
-                        .HasColumnName("database_username")
-                        .HasColumnType("text");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnName("name")
@@ -114,13 +109,18 @@ namespace Ranger.Services.Integrations.Data.Migrations
                         .HasColumnName("project_id")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasColumnName("tenant_id")
+                        .HasColumnType("text");
+
                     b.HasKey("IntegrationId")
                         .HasName("pk_integration_unique_constraints");
 
-                    b.HasIndex("DatabaseUsername", "IntegrationId")
+                    b.HasIndex("ProjectId", "Name")
                         .IsUnique();
 
-                    b.HasIndex("ProjectId", "Name")
+                    b.HasIndex("TenantId", "IntegrationId")
                         .IsUnique();
 
                     b.ToTable("integration_unique_constraints");

@@ -12,26 +12,24 @@ namespace Ranger.Services.Integrations.Handlers
     public class DeleteIntegrationHandler : ICommandHandler<DeleteIntegration>
     {
         private readonly IBusPublisher busPublisher;
-        private readonly ITenantsClient tenantsClient;
         private readonly Func<string, IntegrationsRepository> integrationsRepository;
         private readonly ILogger<DeleteIntegrationHandler> logger;
 
-        public DeleteIntegrationHandler(IBusPublisher busPublisher, Func<string, IntegrationsRepository> integrationsRepository, ITenantsClient tenantsClient, ILogger<DeleteIntegrationHandler> logger)
+        public DeleteIntegrationHandler(IBusPublisher busPublisher, Func<string, IntegrationsRepository> integrationsRepository, ILogger<DeleteIntegrationHandler> logger)
         {
             this.busPublisher = busPublisher;
             this.integrationsRepository = integrationsRepository;
-            this.tenantsClient = tenantsClient;
             this.logger = logger;
         }
 
         public async Task HandleAsync(DeleteIntegration command, ICorrelationContext context)
         {
-            var repo = integrationsRepository.Invoke(command.Domain);
+            var repo = integrationsRepository.Invoke(command.TenantId);
 
             try
             {
                 await repo.SoftDeleteAsync(command.ProjectId, command.CommandingUserEmail, command.Name);
-                busPublisher.Publish(new IntegrationDeleted(command.Domain, command.Name), CorrelationContext.FromId(context.CorrelationContextId));
+                busPublisher.Publish(new IntegrationDeleted(command.TenantId, command.Name), CorrelationContext.FromId(context.CorrelationContextId));
             }
             catch (ConcurrencyException ex)
             {

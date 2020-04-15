@@ -8,7 +8,7 @@ namespace Ranger.Services.Integrations.Data
     public class IntegrationStream : IEventStreamDbSet
     {
         [Required]
-        public string DatabaseUsername { get; set; }
+        public string TenantId { get; set; }
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }

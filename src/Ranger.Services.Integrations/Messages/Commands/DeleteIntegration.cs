@@ -6,15 +6,15 @@ namespace Ranger.Services.Integrations
     [MessageNamespaceAttribute("integrations")]
     public class DeleteIntegration : ICommand
     {
-        public DeleteIntegration(string commandingUserEmail, string domain, string name, Guid projectId)
+        public DeleteIntegration(string commandingUserEmail, string tenantId, string name, Guid projectId)
         {
             if (string.IsNullOrWhiteSpace(commandingUserEmail))
             {
                 throw new System.ArgumentException($"{nameof(commandingUserEmail)} was null or whitespace.");
             }
-            if (string.IsNullOrWhiteSpace(domain))
+            if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new System.ArgumentException($"{nameof(domain)} was null or whitespace.");
+                throw new System.ArgumentException($"{nameof(tenantId)} was null or whitespace.");
             }
             if (string.IsNullOrWhiteSpace(name))
             {
@@ -23,13 +23,13 @@ namespace Ranger.Services.Integrations
 
             this.CommandingUserEmail = commandingUserEmail;
 
-            this.Domain = domain;
+            this.TenantId = tenantId;
             this.Name = name;
             this.ProjectId = projectId;
         }
 
         public string CommandingUserEmail { get; }
-        public string Domain { get; }
+        public string TenantId { get; }
         public string Name { get; }
         public Guid ProjectId { get; }
     }

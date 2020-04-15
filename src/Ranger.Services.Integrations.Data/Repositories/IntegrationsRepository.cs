@@ -9,7 +9,6 @@ using Newtonsoft.Json.Linq;
 using Npgsql;
 using Ranger.Common;
 using Ranger.Common.Data.Exceptions;
-using Ranger.Common;
 
 namespace Ranger.Services.Integrations.Data
 {
@@ -45,7 +44,7 @@ namespace Ranger.Services.Integrations.Data
 
             var newIntegrationStream = new IntegrationStream()
             {
-                DatabaseUsername = this.contextTenant.DatabaseUsername,
+                TenantId = this.contextTenant.TenantId,
                 StreamId = Guid.NewGuid(),
                 Version = 0,
                 Data = JsonConvert.SerializeObject(integration),
@@ -90,7 +89,7 @@ namespace Ranger.Services.Integrations.Data
                 WITH not_deleted AS(
 	                SELECT 
             	    	i.id,
-            	    	i.database_username,
+            	    	i.tenant_id,
             	    	i.stream_id,
             	    	i.version,
             	    	i.data,
@@ -103,7 +102,7 @@ namespace Ranger.Services.Integrations.Data
                )
                SELECT DISTINCT ON (i.stream_id) 
               		i.id,
-              		i.database_username,
+              		i.tenant_id,
               		i.stream_id,
               		i.version,
                     i.data,
@@ -130,7 +129,7 @@ namespace Ranger.Services.Integrations.Data
                 WITH not_deleted AS(
 	                SELECT 
             	    	i.id,
-            	    	i.database_username,
+            	    	i.tenant_id,
             	    	i.stream_id,
             	    	i.version,
             	    	i.data,
@@ -143,7 +142,7 @@ namespace Ranger.Services.Integrations.Data
                )
                SELECT DISTINCT ON (i.stream_id) 
               		i.id,
-              		i.database_username,
+              		i.tenant_id,
               		i.stream_id,
               		i.version,
                     i.data,
@@ -209,7 +208,7 @@ namespace Ranger.Services.Integrations.Data
                 {
                     var updatedIntegrationStream = new IntegrationStream()
                     {
-                        DatabaseUsername = this.contextTenant.DatabaseUsername,
+                        TenantId = this.contextTenant.TenantId,
                         StreamId = currentIntegrationStream.StreamId,
                         Version = currentIntegrationStream.Version + 1,
                         Data = JsonConvert.SerializeObject(currentIntegration),
@@ -290,7 +289,7 @@ namespace Ranger.Services.Integrations.Data
 
             var updatedIntegrationStream = new IntegrationStream()
             {
-                DatabaseUsername = this.contextTenant.DatabaseUsername,
+                TenantId = this.contextTenant.TenantId,
                 StreamId = currentIntegrationStream.StreamId,
                 Version = version,
                 Data = serializedNewIntegrationData,
@@ -380,7 +379,7 @@ namespace Ranger.Services.Integrations.Data
             var newIntegrationUniqueConstraint = new IntegrationUniqueConstraint
             {
                 IntegrationId = integration.IntegrationId,
-                DatabaseUsername = contextTenant.DatabaseUsername,
+                TenantId = contextTenant.TenantId,
                 ProjectId = integration.ProjectId,
                 Name = integration.Name.ToLowerInvariant(),
             };

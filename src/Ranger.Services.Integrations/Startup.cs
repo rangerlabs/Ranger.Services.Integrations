@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
+using Ranger.ApiUtilities;
 using Ranger.Common;
 using Ranger.InternalHttpClient;
 using Ranger.RabbitMQ;
@@ -45,6 +46,8 @@ namespace Ranger.Services.Integrations
                     options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                 });
+            services.AddAutoWrapper();
+            services.AddSwaggerGen("Integrations API", "v1");
 
             services.AddAuthorization(options =>
             {
@@ -53,17 +56,14 @@ namespace Ranger.Services.Integrations
                         policyBuilder.RequireScope("integrationsApi");
                     });
             });
-            services.AddEntityFrameworkNpgsql().AddDbContext<IntegrationsDbContext>((serviceProvider, options) =>
+            services.AddDbContext<IntegrationsDbContext>((serviceProvider, options) =>
             {
                 options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
             },
                 ServiceLifetime.Transient
             );
 
-            services.AddSingleton<ITenantsClient, TenantsClient>(provider =>
-                {
-                    return new TenantsClient("http://tenants:8082", loggerFactory.CreateLogger<TenantsClient>());
-                });
+            services.AddTenantsHttpClient("http://tenants:8082", "tenantsApi", "");
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddTransient<IIntegrationsDbContextInitializer, IntegrationsDbContextInitializer>();
@@ -112,6 +112,8 @@ namespace Ranger.Services.Integrations
             this.loggerFactory = loggerFactory;
             applicationLifetime.ApplicationStopping.Register(OnShutdown);
 
+            app.UseSwagger("v1", "Integrations API");
+            app.UseAutoWrapper();
             app.UseRouting();
             app.UseAuthentication();
             app.UseEndpoints(endpoints =>

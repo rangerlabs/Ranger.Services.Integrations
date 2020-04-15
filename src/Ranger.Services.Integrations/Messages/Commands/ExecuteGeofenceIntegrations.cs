@@ -8,18 +8,18 @@ namespace Ranger.Services.Integrations
     [MessageNamespace("integrations")]
     public class ExecuteGeofenceIntegrations : ICommand
     {
-        public string Domain { get; }
+        public string TenantId { get; }
         public Guid ProjectId { get; }
         public Common.Breadcrumb Breadcrumb { get; }
         public IEnumerable<GeofenceIntegrationResult> GeofenceIntegrationResults { get; }
         public EnvironmentEnum Environment { get; }
 
-        public ExecuteGeofenceIntegrations(string domain, Guid projectId, EnvironmentEnum environment, Common.Breadcrumb breadcrumb, IEnumerable<GeofenceIntegrationResult> geofenceIntegrationResults)
+        public ExecuteGeofenceIntegrations(string tenantId, Guid projectId, EnvironmentEnum environment, Common.Breadcrumb breadcrumb, IEnumerable<GeofenceIntegrationResult> geofenceIntegrationResults)
         {
             this.Environment = environment;
-            if (string.IsNullOrWhiteSpace(domain))
+            if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new ArgumentException($"{nameof(domain)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace.");
             }
 
             this.GeofenceIntegrationResults = geofenceIntegrationResults ??
@@ -27,7 +27,7 @@ namespace Ranger.Services.Integrations
             this.Breadcrumb = breadcrumb ??
                 throw new ArgumentNullException(nameof(breadcrumb));
             this.ProjectId = projectId;
-            this.Domain = domain;
+            this.TenantId = tenantId;
         }
     }
 

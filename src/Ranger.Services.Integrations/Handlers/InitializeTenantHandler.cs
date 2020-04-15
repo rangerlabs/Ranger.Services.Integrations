@@ -26,17 +26,17 @@ namespace Ranger.Services.Integrations
 
         public async Task HandleAsync(InitializeTenant command, ICorrelationContext context)
         {
-            await this.loginRoleRepository.CreateTenantLoginRole(command.DatabaseUsername, command.DatabasePassword);
-            logger.LogInformation($"New tenant login '{command.DatabaseUsername}' added to Integrations database.");
+            await this.loginRoleRepository.CreateTenantLoginRole(command.TenantId, command.DatabasePassword);
+            logger.LogInformation($"New tenant login '{command.TenantId}' added to Integrations database.");
 
             var tables = Enum.GetNames(typeof(RowLevelSecureTablesEnum)).Concat(Enum.GetNames(typeof(PublicTablesEnum)));
             foreach (var table in tables)
             {
                 logger.LogInformation($"Setting tenant login permissions on table: '{table}'.");
-                await this.loginRoleRepository.GrantTenantLoginRoleTablePermissions(command.DatabaseUsername, table);
+                await this.loginRoleRepository.GrantTenantLoginRoleTablePermissions(command.TenantId, table);
             }
             logger.LogInformation("Setting tenant login sequence permissions");
-            await this.loginRoleRepository.GrantTenantLoginRoleSequencePermissions(command.DatabaseUsername);
+            await this.loginRoleRepository.GrantTenantLoginRoleSequencePermissions(command.TenantId);
 
             logger.LogInformation($"New Integrations tenant initialized successfully.");
             busPublisher.Publish(new TenantInitialized(), context);

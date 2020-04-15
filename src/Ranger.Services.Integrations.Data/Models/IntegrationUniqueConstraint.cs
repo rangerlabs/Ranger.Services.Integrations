@@ -12,7 +12,7 @@ namespace Ranger.Services.Integrations.Data
         public Guid IntegrationId { get; set; }
 
         [Required]
-        public string DatabaseUsername { get; set; }
+        public string TenantId { get; set; }
 
         [Required]
         public Guid ProjectId { get; set; }

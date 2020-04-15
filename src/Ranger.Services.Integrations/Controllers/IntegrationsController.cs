@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoWrapper.Wrappers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -16,21 +17,24 @@ namespace Ranger.Services.Geofences.Controllers
     public class IntegrationsController : ControllerBase
     {
         private readonly Func<string, IntegrationsRepository> integrationsRepositoryFactory;
-        private readonly ITenantsClient tenantsClient;
         private readonly ILogger<IntegrationsController> logger;
 
-        public IntegrationsController(Func<string, IntegrationsRepository> integrationsRepositoryFactory, ITenantsClient tenantsClient, ILogger<IntegrationsController> logger)
+        public IntegrationsController(Func<string, IntegrationsRepository> integrationsRepositoryFactory, ILogger<IntegrationsController> logger)
         {
             this.integrationsRepositoryFactory = integrationsRepositoryFactory;
-            this.tenantsClient = tenantsClient;
             this.logger = logger;
         }
 
-        [HttpGet("/{domain}/integrations")]
-        public async Task<IActionResult> GetAllIntegrations([FromRoute] string domain, [FromQuery] Guid projectId)
+        ///<summary>
+        /// Gets all integrations for a tenant's project
+        ///</summary>
+        ///<param name="tenantId">The tenant id to retrieve integrations for</param>
+        ///<param name="projectId">The project id to retrieve integrations for</param>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpGet("/{domain}/integrations/{projectId}")]
+        public async Task<ApiResponse> GetAllIntegrations(string tenantId, Guid projectId)
         {
-            var repo = integrationsRepositoryFactory(domain);
-
+            var repo = integrationsRepositoryFactory(tenantId);
             try
             {
                 var integrationVersionTuples = await repo.GetAllIntegrationsForProject(projectId);
@@ -46,12 +50,13 @@ namespace Ranger.Services.Geofences.Controllers
                     integration.Version = result.version;
                     integrationsList.Add(integration);
                 }
-                return Ok(integrationsList);
+                return new ApiResponse("Successfully retrived integrations", integrationsList);
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, $"An exception occurred retrieving the requested integrations for domain '{domain}' and projectId '{projectId}'.");
-                return StatusCode(StatusCodes.Status500InternalServerError);
+                var message = "An error occurred retrieving geofences";
+                this.logger.LogError(ex, message);
+                throw new ApiException(message, StatusCodes.Status500InternalServerError);
             }
         }
     }
