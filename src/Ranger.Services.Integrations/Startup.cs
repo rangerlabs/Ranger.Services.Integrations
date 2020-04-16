@@ -63,7 +63,7 @@ namespace Ranger.Services.Integrations
                 ServiceLifetime.Transient
             );
 
-            services.AddTenantsHttpClient("http://tenants:8082", "tenantsApi", "");
+            services.AddTenantsHttpClient("http://tenants:8082", "tenantsApi", "cKprgh9wYKWcsm");
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddTransient<IIntegrationsDbContextInitializer, IntegrationsDbContextInitializer>();
