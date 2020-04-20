@@ -4,6 +4,7 @@ using System.Dynamic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoWrapper.Wrappers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -14,6 +15,8 @@ using Ranger.Services.Integrations.Data;
 namespace Ranger.Services.Geofences.Controllers
 {
     [ApiController]
+    [ApiVersion("1.0")]
+    [Authorize]
     public class IntegrationsController : ControllerBase
     {
         private readonly Func<string, IntegrationsRepository> integrationsRepositoryFactory;
@@ -56,7 +59,7 @@ namespace Ranger.Services.Geofences.Controllers
             {
                 var message = "An error occurred retrieving geofences";
                 this.logger.LogError(ex, message);
-                throw new ApiException(message, StatusCodes.Status500InternalServerError);
+                throw new ApiException(new RangerApiError(message), StatusCodes.Status500InternalServerError);
             }
         }
     }

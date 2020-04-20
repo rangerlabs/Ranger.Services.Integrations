@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,14 +49,8 @@ namespace Ranger.Services.Integrations
                 });
             services.AddAutoWrapper();
             services.AddSwaggerGen("Integrations API", "v1");
+            services.AddApiVersioning(o => o.ApiVersionReader = new HeaderApiVersionReader("api-version"));
 
-            services.AddAuthorization(options =>
-            {
-                options.AddPolicy("integrationsApi", policyBuilder =>
-                    {
-                        policyBuilder.RequireScope("integrationsApi");
-                    });
-            });
             services.AddDbContext<IntegrationsDbContext>((serviceProvider, options) =>
             {
                 options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
@@ -63,6 +58,7 @@ namespace Ranger.Services.Integrations
                 ServiceLifetime.Transient
             );
 
+            services.AddPollyPolicyRegistry();
             services.AddTenantsHttpClient("http://tenants:8082", "tenantsApi", "cKprgh9wYKWcsm");
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -114,8 +110,12 @@ namespace Ranger.Services.Integrations
 
             app.UseSwagger("v1", "Integrations API");
             app.UseAutoWrapper();
+
             app.UseRouting();
+
             app.UseAuthentication();
+            app.UseAuthorization();
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
