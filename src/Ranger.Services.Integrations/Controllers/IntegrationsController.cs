@@ -34,7 +34,7 @@ namespace Ranger.Services.Geofences.Controllers
         ///<param name="tenantId">The tenant id to retrieve integrations for</param>
         ///<param name="projectId">The project id to retrieve integrations for</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [HttpGet("/{domain}/integrations/{projectId}")]
+        [HttpGet("/integrations/{tenantId}/{projectId}")]
         public async Task<ApiResponse> GetAllIntegrations(string tenantId, Guid projectId)
         {
             var repo = integrationsRepositoryFactory(tenantId);
@@ -59,7 +59,7 @@ namespace Ranger.Services.Geofences.Controllers
             {
                 var message = "An error occurred retrieving geofences";
                 this.logger.LogError(ex, message);
-                throw new ApiException(new RangerApiError(message), StatusCodes.Status500InternalServerError);
+                throw new ApiException(message, StatusCodes.Status500InternalServerError);
             }
         }
     }

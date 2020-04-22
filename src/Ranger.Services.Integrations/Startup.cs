@@ -73,7 +73,7 @@ namespace Ranger.Services.Integrations
                 .AddIdentityServerAuthentication(options =>
                 {
                     options.Authority = "http://identity:5000/auth";
-                    options.ApiName = "projectsApi";
+                    options.ApiName = "integrationsApi";
 
                     options.RequireHttpsMetadata = false;
                 });
