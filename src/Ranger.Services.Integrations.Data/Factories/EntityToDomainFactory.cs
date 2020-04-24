@@ -33,7 +33,7 @@ namespace Ranger.Services.Integrations.Data
                     }
                 default:
                     {
-                        throw new ArgumentException($"No Integration Type associated with '{entityIntegration.GetType()}'.");
+                        throw new ArgumentException($"No Integration Type associated with '{entityIntegration.GetType()}'");
                     }
             }
         }

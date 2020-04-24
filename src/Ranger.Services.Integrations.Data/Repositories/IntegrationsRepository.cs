@@ -31,15 +31,15 @@ namespace Ranger.Services.Integrations.Data
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
-                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
             }
             if (string.IsNullOrWhiteSpace(eventName))
             {
-                throw new ArgumentException($"{nameof(eventName)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(eventName)} was null or whitespace");
             }
             if (integration is null)
             {
-                throw new ArgumentNullException($"{nameof(integration)} was null.");
+                throw new ArgumentNullException($"{nameof(integration)} was null");
             }
 
             var newIntegrationStream = new IntegrationStream()
@@ -70,7 +70,7 @@ namespace Ranger.Services.Integrations.Data
                     {
                         case IntegrationJsonbConstraintNames.Name:
                             {
-                                throw new EventStreamDataConstraintException($"The integration name '{integration.Name}' is in use by another integration.");
+                                throw new EventStreamDataConstraintException($"The integration name '{integration.Name}' is in use by another integration");
                             }
                         default:
                             {
@@ -172,7 +172,7 @@ namespace Ranger.Services.Integrations.Data
         {
             if (string.IsNullOrWhiteSpace(name))
             {
-                throw new ArgumentException($"{nameof(name)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(name)} was null or whitespace");
             }
 
             return await this.context.IntegrationUniqueConstraints.Where(_ => _.ProjectId == projectId && _.Name == name).Select(_ => _.IntegrationId).SingleOrDefaultAsync();
@@ -182,7 +182,7 @@ namespace Ranger.Services.Integrations.Data
         {
             if (string.IsNullOrWhiteSpace(name))
             {
-                throw new ArgumentException($"{nameof(name)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(name)} was null or whitespace");
             }
             this.context.IntegrationStreams.RemoveRange(
                 await this.context.IntegrationStreams.FromSqlInterpolated($"SELECT * FROM integration_streams WHERE data ->> 'ProjectId' = {projectId.ToString()} AND data ->> 'Name' = {name} ORDER BY version DESC").ToListAsync()
@@ -193,7 +193,7 @@ namespace Ranger.Services.Integrations.Data
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
-                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
             }
 
             var currentIntegrationStream = await GetIntegrationStreamByIntegrationNameAsync(projectId, name);
@@ -223,7 +223,7 @@ namespace Ranger.Services.Integrations.Data
                     {
                         await this.context.SaveChangesAsync();
                         deleted = true;
-                        logger.LogInformation($"Integration {currentIntegration.Name} deleted.");
+                        logger.LogInformation($"Integration {currentIntegration.Name} deleted");
                     }
                     catch (DbUpdateException ex)
                     {
@@ -235,7 +235,7 @@ namespace Ranger.Services.Integrations.Data
                             {
                                 case IntegrationJsonbConstraintNames.IntegrationId_Version:
                                     {
-                                        logger.LogError($"The update version number was outdated. The current and updated stream versions are '{currentIntegrationStream.Version + 1}'.");
+                                        logger.LogError($"The update version number was outdated. The current and updated stream versions are '{currentIntegrationStream.Version + 1}'");
                                         maxConcurrencyAttempts--;
                                         continue;
                                     }
@@ -246,12 +246,12 @@ namespace Ranger.Services.Integrations.Data
                 }
                 if (!deleted)
                 {
-                    throw new ConcurrencyException($"After '{maxConcurrencyAttempts}' attempts, the version was still outdated. Too many updates have been applied in a short period of time. The current stream version is '{currentIntegrationStream.Version + 1}'. The integration was not deleted.");
+                    throw new ConcurrencyException($"After '{maxConcurrencyAttempts}' attempts, the version was still outdated. Too many updates have been applied in a short period of time. The current stream version is '{currentIntegrationStream.Version + 1}'. The integration was not deleted");
                 }
             }
             else
             {
-                throw new ArgumentException($"No integration was found with name '{name}' in project with id '{projectId}'.");
+                throw new ArgumentException($"No integration was found with name '{name}' in project with id '{projectId}'");
             }
         }
 
@@ -259,21 +259,21 @@ namespace Ranger.Services.Integrations.Data
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
-                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
             }
             if (string.IsNullOrWhiteSpace(eventName))
             {
-                throw new ArgumentException($"{nameof(eventName)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(eventName)} was null or whitespace");
             }
             if (integration is null)
             {
-                throw new ArgumentException($"{nameof(integration)} was null.");
+                throw new ArgumentException($"{nameof(integration)} was null");
             }
 
             var currentIntegrationStream = await GetIntegrationStreamByIntegrationIdAsync(projectId, integration.IntegrationId);
             if (currentIntegrationStream is null)
             {
-                throw new Exception($"No integration was found for ProjectId '{integration.ProjectId}' and Integration Id '{integration.IntegrationId}'.");
+                throw new Exception($"No integration was found for ProjectId '{integration.ProjectId}' and Integration Id '{integration.IntegrationId}'");
             }
             ValidateRequestVersionIncremented(version, currentIntegrationStream);
 
@@ -315,11 +315,11 @@ namespace Ranger.Services.Integrations.Data
                     {
                         case IntegrationJsonbConstraintNames.Name:
                             {
-                                throw new EventStreamDataConstraintException("The integration name is in use by another integration.");
+                                throw new EventStreamDataConstraintException("The integration name is in use by another integration");
                             }
                         case IntegrationJsonbConstraintNames.IntegrationId_Version:
                             {
-                                throw new ConcurrencyException($"The update version number was outdated. The current stream version is '{currentIntegrationStream.Version}' and the request update version was '{version}'.");
+                                throw new ConcurrencyException($"The update version number was outdated. The current stream version is '{currentIntegrationStream.Version}' and the request update version was '{version}'");
                             }
                         default:
                             {
@@ -348,7 +348,7 @@ namespace Ranger.Services.Integrations.Data
             var requestJObject = JsonConvert.DeserializeObject<JObject>(serializedNewIntegrationData);
             if (JToken.DeepEquals(currentJObject, requestJObject))
             {
-                throw new NoOpException("No changes were made from the previous version.");
+                throw new NoOpException("No changes were made from the previous version");
             }
         }
 
@@ -356,11 +356,11 @@ namespace Ranger.Services.Integrations.Data
         {
             if (version - currentIntegrationStream.Version > 1)
             {
-                throw new ConcurrencyException($"The update version number was too high. The current stream version is '{currentIntegrationStream.Version}' and the request update version was '{version}'.");
+                throw new ConcurrencyException($"The update version number was too high. The current stream version is '{currentIntegrationStream.Version}' and the request update version was '{version}'");
             }
             if (version - currentIntegrationStream.Version <= 0)
             {
-                throw new ConcurrencyException($"The update version number was outdated. The current stream version is '{currentIntegrationStream.Version}' and the request update version was '{version}'.");
+                throw new ConcurrencyException($"The update version number was outdated. The current stream version is '{currentIntegrationStream.Version}' and the request update version was '{version}'");
             }
         }
 

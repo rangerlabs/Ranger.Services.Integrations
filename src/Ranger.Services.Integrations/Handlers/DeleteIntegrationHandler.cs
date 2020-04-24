@@ -38,8 +38,8 @@ namespace Ranger.Services.Integrations.Handlers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to delete integration.");
-                throw new RangerException("Failed to delete the integration. No additional data could be provided.");
+                logger.LogError(ex, "Failed to delete integration");
+                throw new RangerException("Failed to delete the integration. No additional data could be provided");
             }
         }
     }

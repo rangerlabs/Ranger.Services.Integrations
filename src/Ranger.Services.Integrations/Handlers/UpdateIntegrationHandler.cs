@@ -36,8 +36,8 @@ namespace Ranger.Services.Integrations.Handlers
             }
             catch (JsonSerializationException ex)
             {
-                logger.LogError(ex, "Failed to instantiate the integration from the type and message content provided.");
-                throw new RangerException($"Failed to update the integration. The requested integration was malformed.");
+                logger.LogError(ex, "Failed to instantiate the integration from the type and message content provided");
+                throw new RangerException($"Failed to update the integration. The requested integration was malformed");
             }
 
             try
@@ -57,8 +57,8 @@ namespace Ranger.Services.Integrations.Handlers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to create an integration.");
-                throw new RangerException("Failed to update the integration. No additional data could be provided.");
+                logger.LogError(ex, "Failed to create an integration");
+                throw new RangerException("Failed to update the integration. No additional data could be provided");
             }
         }
     }

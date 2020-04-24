@@ -17,7 +17,7 @@ namespace Ranger.Services.Integrations.Data
                     }
                 default:
                     {
-                        throw new ArgumentException($"No Integration Type associated with '{integrationType}'.");
+                        throw new ArgumentException($"No Integration Type associated with '{integrationType}'");
                     }
             }
         }

@@ -14,11 +14,11 @@ namespace Ranger.Services.Integrations
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new System.ArgumentException($"{nameof(tenantId)} was null or whitespace.");
+                throw new System.ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
             if (string.IsNullOrWhiteSpace(name))
             {
-                throw new System.ArgumentException($"{nameof(name)} was null or whitespace.");
+                throw new System.ArgumentException($"{nameof(name)} was null or whitespace");
             }
 
             this.TenantId = tenantId;

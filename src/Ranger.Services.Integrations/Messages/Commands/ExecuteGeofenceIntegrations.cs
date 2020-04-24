@@ -19,7 +19,7 @@ namespace Ranger.Services.Integrations
             this.Environment = environment;
             if (string.IsNullOrWhiteSpace(tenantId))
             {
-                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
 
             this.GeofenceIntegrationResults = geofenceIntegrationResults ??

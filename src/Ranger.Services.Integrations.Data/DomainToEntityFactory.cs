@@ -31,7 +31,7 @@ namespace Ranger.Services.Integrations.Data
                     }
                 default:
                     {
-                        throw new ArgumentException($"No Integration Type associated with '{domainIntegration.GetType()}'.");
+                        throw new ArgumentException($"No Integration Type associated with '{domainIntegration.GetType()}'");
                     }
             }
         }

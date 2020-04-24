@@ -11,17 +11,17 @@ namespace Ranger.Services.Integrations
         {
             if (string.IsNullOrWhiteSpace(commandingUserEmail))
             {
-                throw new ArgumentException($"{nameof(commandingUserEmail)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(commandingUserEmail)} was null or whitespace");
             }
 
             if (string.IsNullOrEmpty(tenantId))
             {
-                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
 
             if (string.IsNullOrEmpty(messageJsonContent))
             {
-                throw new ArgumentException($"{nameof(messageJsonContent)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(messageJsonContent)} was null or whitespace");
             }
 
             this.TenantId = tenantId;
