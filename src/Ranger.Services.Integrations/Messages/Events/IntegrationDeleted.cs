@@ -1,3 +1,4 @@
+using System;
 using Ranger.RabbitMQ;
 
 namespace Ranger.Services.Integrations
@@ -6,9 +7,10 @@ namespace Ranger.Services.Integrations
     public class IntegrationDeleted : IEvent
     {
         public string TenantId { get; }
+        public Guid IntegrationId { get; }
         public string Name { get; }
 
-        public IntegrationDeleted(string tenantId, string name)
+        public IntegrationDeleted(string tenantId, Guid integrationId, string name)
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
@@ -20,6 +22,7 @@ namespace Ranger.Services.Integrations
             }
 
             this.TenantId = tenantId;
+            this.IntegrationId = integrationId;
             this.Name = name;
         }
     }

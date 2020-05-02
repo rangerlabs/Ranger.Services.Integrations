@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
@@ -12,7 +13,7 @@ using Ranger.Common;
 using Ranger.InternalHttpClient;
 using Ranger.Services.Integrations.Data;
 
-namespace Ranger.Services.Geofences.Controllers
+namespace Ranger.Services.Integrations
 {
     [ApiController]
     [ApiVersion("1.0")]
@@ -20,11 +21,13 @@ namespace Ranger.Services.Geofences.Controllers
     public class IntegrationsController : ControllerBase
     {
         private readonly Func<string, IntegrationsRepository> integrationsRepositoryFactory;
+        private readonly ProjectsHttpClient projectsHttpClient;
         private readonly ILogger<IntegrationsController> logger;
 
-        public IntegrationsController(Func<string, IntegrationsRepository> integrationsRepositoryFactory, ILogger<IntegrationsController> logger)
+        public IntegrationsController(Func<string, IntegrationsRepository> integrationsRepositoryFactory, ProjectsHttpClient projectsHttpClient, ILogger<IntegrationsController> logger)
         {
             this.integrationsRepositoryFactory = integrationsRepositoryFactory;
+            this.projectsHttpClient = projectsHttpClient;
             this.logger = logger;
         }
 
@@ -35,7 +38,7 @@ namespace Ranger.Services.Geofences.Controllers
         ///<param name="projectId">The project id to retrieve integrations for</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [HttpGet("/integrations/{tenantId}/{projectId}")]
-        public async Task<ApiResponse> GetAllIntegrations(string tenantId, Guid projectId)
+        public async Task<ApiResponse> GetAllIntegrationsForProject(string tenantId, Guid projectId)
         {
             var repo = integrationsRepositoryFactory(tenantId);
             try
@@ -57,7 +60,30 @@ namespace Ranger.Services.Geofences.Controllers
             }
             catch (Exception ex)
             {
-                var message = "An error occurred retrieving geofences";
+                var message = "An error occurred retrieving integrations";
+                this.logger.LogError(ex, message);
+                throw new ApiException(message, StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        ///<summary>
+        /// Gets all integrations that are in use by an active project
+        ///</summary>
+        ///<param name="tenantId">The tenant id to retrieve integrations for</param>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpGet("/integrations/{tenantId}")]
+        public async Task<ApiResponse> GetAllActiveIntegrationsForTenant(string tenantId)
+        {
+            var projects = await projectsHttpClient.GetAllProjects<IEnumerable<Project>>(tenantId);
+            var repo = integrationsRepositoryFactory(tenantId);
+            try
+            {
+                var integrationCount = await repo.GetAllIntegrationsCountForActiveProjects(projects.Result.Select(p => p.ProjectId));
+                return new ApiResponse("Successfully retrived integrations", integrationCount);
+            }
+            catch (Exception ex)
+            {
+                var message = "An error occurred retrieving integrations";
                 this.logger.LogError(ex, message);
                 throw new ApiException(message, StatusCodes.Status500InternalServerError);
             }

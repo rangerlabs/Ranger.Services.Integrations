@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -15,18 +17,30 @@ namespace Ranger.Services.Integrations.Handlers
     {
         private readonly IBusPublisher busPublisher;
         private readonly Func<string, IntegrationsRepository> integrationsRepository;
+        private readonly SubscriptionsHttpClient subscriptionsHttpClient;
+        private readonly ProjectsHttpClient projectsHttpClient;
         private readonly ILogger<CreateIntegrationHandler> logger;
 
-        public CreateIntegrationHandler(IBusPublisher busPublisher, Func<string, IntegrationsRepository> integrationsRepository, ILogger<CreateIntegrationHandler> logger)
+        public CreateIntegrationHandler(IBusPublisher busPublisher, Func<string, IntegrationsRepository> integrationsRepository, SubscriptionsHttpClient subscriptionsHttpClient, ProjectsHttpClient projectsHttpClient, ILogger<CreateIntegrationHandler> logger)
         {
             this.busPublisher = busPublisher;
             this.integrationsRepository = integrationsRepository;
+            this.subscriptionsHttpClient = subscriptionsHttpClient;
+            this.projectsHttpClient = projectsHttpClient;
             this.logger = logger;
         }
 
         public async Task HandleAsync(CreateIntegration command, ICorrelationContext context)
         {
             var repo = integrationsRepository.Invoke(command.TenantId);
+
+            var limitsApiResponse = await subscriptionsHttpClient.GetLimitDetails<SubscriptionLimitDetails>(command.TenantId);
+            var projectsApiResult = await projectsHttpClient.GetAllProjects<IEnumerable<Project>>(command.TenantId);
+            var currentIntegrationCount = await repo.GetAllIntegrationsCountForActiveProjects(projectsApiResult.Result.Select(p => p.ProjectId));
+            if (currentIntegrationCount >= limitsApiResponse.Result.Limit.Integrations)
+            {
+                throw new RangerException("Subscription limit met");
+            }
 
             IIntegration entityIntegration;
             try

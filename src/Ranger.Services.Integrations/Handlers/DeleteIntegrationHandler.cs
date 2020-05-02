@@ -28,8 +28,8 @@ namespace Ranger.Services.Integrations.Handlers
 
             try
             {
-                await repo.SoftDeleteAsync(command.ProjectId, command.CommandingUserEmail, command.Name);
-                busPublisher.Publish(new IntegrationDeleted(command.TenantId, command.Name), CorrelationContext.FromId(context.CorrelationContextId));
+                var integrationId = await repo.SoftDeleteAsync(command.ProjectId, command.CommandingUserEmail, command.Name);
+                busPublisher.Publish(new IntegrationDeleted(command.TenantId, integrationId, command.Name), CorrelationContext.FromId(context.CorrelationContextId));
             }
             catch (ConcurrencyException ex)
             {
