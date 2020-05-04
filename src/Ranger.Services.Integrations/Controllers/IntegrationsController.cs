@@ -60,7 +60,7 @@ namespace Ranger.Services.Integrations
             }
             catch (Exception ex)
             {
-                var message = "An error occurred retrieving integrations";
+                var message = "Failed to retrieve integrations";
                 this.logger.LogError(ex, message);
                 throw new ApiException(message, StatusCodes.Status500InternalServerError);
             }
@@ -71,19 +71,19 @@ namespace Ranger.Services.Integrations
         ///</summary>
         ///<param name="tenantId">The tenant id to retrieve integrations for</param>
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [HttpGet("/integrations/{tenantId}")]
+        [HttpGet("/integrations/{tenantId}/count")]
         public async Task<ApiResponse> GetAllActiveIntegrationsForTenant(string tenantId)
         {
             var projects = await projectsHttpClient.GetAllProjects<IEnumerable<Project>>(tenantId);
             var repo = integrationsRepositoryFactory(tenantId);
             try
             {
-                var integrationCount = await repo.GetAllIntegrationsCountForActiveProjects(projects.Result.Select(p => p.ProjectId));
-                return new ApiResponse("Successfully retrived integrations", integrationCount);
+                var allIntegrations = await repo.GetAllIntegrationsForProjectIds(projects.Result.Select(p => p.ProjectId));
+                return new ApiResponse("Successfully retrieved integrations", result: allIntegrations.Count());
             }
             catch (Exception ex)
             {
-                var message = "An error occurred retrieving integrations";
+                var message = "Failed to retrieve integrations";
                 this.logger.LogError(ex, message);
                 throw new ApiException(message, StatusCodes.Status500InternalServerError);
             }

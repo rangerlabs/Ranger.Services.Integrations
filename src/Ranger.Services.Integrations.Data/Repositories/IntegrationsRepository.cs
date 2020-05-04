@@ -42,6 +42,8 @@ namespace Ranger.Services.Integrations.Data
                 throw new ArgumentNullException($"{nameof(integration)} was null");
             }
 
+            var now = DateTime.UtcNow;
+            integration.CreatedOn = now;
             var newIntegrationStream = new IntegrationStream()
             {
                 TenantId = this.contextTenant.TenantId,
@@ -50,7 +52,7 @@ namespace Ranger.Services.Integrations.Data
                 Data = JsonConvert.SerializeObject(integration),
                 IntegrationType = integrationType,
                 Event = eventName,
-                InsertedAt = DateTime.UtcNow,
+                InsertedAt = now,
                 InsertedBy = userEmail,
             };
 
@@ -82,25 +84,54 @@ namespace Ranger.Services.Integrations.Data
             }
         }
 
-        public async Task<int> GetAllIntegrationsCountForActiveProjects(IEnumerable<Guid> projectIds)
+        public async Task<IEnumerable<(IIntegration integration, IntegrationsEnum integrationType)>> GetAllIntegrationsForProjectIds(IEnumerable<Guid> projectIds)
         {
-            var integrationStreamsCount = await this.context.IntegrationStreams
-            .FromSqlInterpolated($@"
-                    WITH active_integrations AS (
-                        SELECT stream_id, MAX(version) AS version FROM integration_streams WHERE data ->> 'Deleted' = 'false' GROUP BY stream_id
+            // var stringIds = $"'{String.Join("','", projectIds)}'";
+            var integrationStreams = await this.context.IntegrationStreams
+            .FromSqlRaw($@"
+                    WITH active_integrations AS(
+                        WITH max_versions AS (
+                            SELECT stream_id, MAX(version) AS version
+                            FROM integration_streams
+                            GROUP BY stream_id
+                        )
+                        select i.stream_id, i.version
+                        FROM max_versions mv, integration_streams i
+                        WHERE i.stream_id = mv.stream_id
+                        AND i.version = mv.version
+                        AND (i.data ->> 'Deleted') = 'false'
                     )
-                    SELECT i.*
+                    SELECT i.id,
+            	    	i.tenant_id,
+            	    	i.stream_id,
+            	    	i.version,
+            	    	i.data,
+                        i.integration_type,
+            	    	i.event,
+            	    	i.inserted_at,
+            	    	i.inserted_by
                     FROM active_integrations ai, integration_streams i
                     WHERE i.stream_id = ai.stream_id
                     AND i.version = ai.version
-                    AND data ->> 'ProjectId' IN ({String.Join(',', projectIds)})").CountAsync();
-            return integrationStreamsCount;
+                    AND (i.data ->> 'ProjectId') IN ('{String.Join("','", projectIds)}');").ToListAsync();
+
+            var integrationVersionTuples = new List<(IIntegration integration, IntegrationsEnum integrationType)>();
+            foreach (var integrationStream in integrationStreams)
+            {
+                integrationVersionTuples.Add(
+                    (
+                        JsonToEntityFactory.Factory(integrationStream.IntegrationType, integrationStream.Data),
+                        integrationStream.IntegrationType
+                    )
+                );
+            }
+            return integrationVersionTuples;
         }
 
         public async Task<IEnumerable<(IIntegration integration, IntegrationsEnum integrationType)>> GetAllIntegrationsByIdForProject(Guid projectId, IEnumerable<Guid> integrationIds)
         {
             var integrationStreams = await this.context.IntegrationStreams
-            .FromSqlInterpolated($@"
+            .FromSqlRaw($@"
                 WITH not_deleted AS(
 	                SELECT 
             	    	i.id,
@@ -126,7 +157,7 @@ namespace Ranger.Services.Integrations.Data
             		i.inserted_at,
             		i.inserted_by
                 FROM not_deleted i
-                WHERE (i.data ->> 'IntegrationId') IN ({String.Join(',', integrationIds)})
+                WHERE (i.data ->> 'IntegrationId') IN ('{String.Join("','", integrationIds)}')
                 ORDER BY i.stream_id, i.version DESC;").ToListAsync();
             var integrationVersionTuples = new List<(IIntegration integration, IntegrationsEnum integrationType)>();
             foreach (var integrationStream in integrationStreams)
@@ -139,7 +170,7 @@ namespace Ranger.Services.Integrations.Data
 
         public async Task<IEnumerable<(IIntegration integration, IntegrationsEnum integrationType, int version)>> GetAllIntegrationsForProject(Guid projectId)
         {
-            var IntegrationStreams = await this.context.IntegrationStreams.
+            var integrationStreams = await this.context.IntegrationStreams.
             FromSqlInterpolated($@"
                 WITH not_deleted AS(
 	                SELECT 
@@ -168,7 +199,7 @@ namespace Ranger.Services.Integrations.Data
                 FROM not_deleted i
                 ORDER BY i.stream_id, i.version DESC;").ToListAsync();
             var integrationVersionTuples = new List<(IIntegration integration, IntegrationsEnum integrationType, int version)>();
-            foreach (var integrationStream in IntegrationStreams)
+            foreach (var integrationStream in integrationStreams)
             {
                 var integration = JsonToEntityFactory.Factory(integrationStream.IntegrationType, integrationStream.Data);
                 integrationVersionTuples.Add((EntityToDomainFactory.Factory(integration), integrationStream.IntegrationType, integrationStream.Version));

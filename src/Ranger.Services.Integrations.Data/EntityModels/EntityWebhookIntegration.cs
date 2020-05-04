@@ -22,5 +22,6 @@ namespace Ranger.Services.Integrations.Data.EntityModels
         public string Metadata { get; set; }
         public bool Enabled { get; set; } = true;
         public bool Deleted { get; set; } = false;
+        public DateTime CreatedOn { get; set; }
     }
 }

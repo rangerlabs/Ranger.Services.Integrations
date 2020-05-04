@@ -136,7 +136,8 @@ namespace Ranger.Services.Integrations
                 .SubscribeCommand<DeleteIntegration>((c, e) =>
                     new DeleteIntegrationRejected(e.Message, "")
                 )
-                .SubscribeCommand<ExecuteGeofenceIntegrations>();
+                .SubscribeCommand<ExecuteGeofenceIntegrations>()
+                .SubscribeCommand<EnforceIntegrationResourceLimits>();
         }
 
         private void OnShutdown()

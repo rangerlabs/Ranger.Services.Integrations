@@ -16,5 +16,6 @@ namespace Ranger.Services.Integrations.Data.DomainModels
         public IEnumerable<KeyValuePair<string, string>> Metadata { get; set; }
         public bool Enabled { get; set; } = true;
         public bool Deleted { get; set; } = false;
+        public DateTime CreatedOn { get; set; }
     }
 }
