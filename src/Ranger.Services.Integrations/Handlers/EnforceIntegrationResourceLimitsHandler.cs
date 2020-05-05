@@ -28,15 +28,16 @@ namespace Ranger.Services.Integrations.Handlers
         {
             foreach (var tenantLimit in message.TenantLimits)
             {
-                var repo = integrationsRepoFactory(tenantLimit.Item1);
+                var repo = integrationsRepoFactory(tenantLimit.tenantId);
                 var integrations = await repo.GetAllIntegrationsForProjectIds(tenantLimit.remainingProjectIds);
-                if (integrations.Count() > tenantLimit.Item2)
+                if (integrations.Count() > tenantLimit.limit)
                 {
-                    var exceededByCount = integrations.Count() - tenantLimit.Item2;
-                    var projectsToRemove = integrations.OrderByDescending(p => p.integration.CreatedOn).Take(exceededByCount);
-                    foreach (var projectToRemove in projectsToRemove)
+                    var exceededByCount = integrations.Count() - tenantLimit.limit;
+                    var integrationsToRemove = integrations.OrderByDescending(p => p.integration.CreatedOn).Take(exceededByCount);
+                    foreach (var projectToRemove in integrationsToRemove)
                     {
                         await repo.SoftDeleteAsync(projectToRemove.integration.ProjectId, "SubscriptionEnforcer", projectToRemove.integration.Name);
+                        busPublisher.Send(new PurgeIntegrationFromGeofences(tenantLimit.tenantId, projectToRemove.integration.ProjectId, projectToRemove.integration.IntegrationId), context);
                     }
                 }
             }
