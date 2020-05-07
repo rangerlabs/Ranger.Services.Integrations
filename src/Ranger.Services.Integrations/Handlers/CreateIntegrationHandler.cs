@@ -34,12 +34,16 @@ namespace Ranger.Services.Integrations.Handlers
         {
             var repo = integrationsRepository.Invoke(command.TenantId);
 
-            var limitsApiResponse = await subscriptionsHttpClient.GetLimitDetails<SubscriptionLimitDetails>(command.TenantId);
+            var limitsApiResponse = await subscriptionsHttpClient.GetSubscription<SubscriptionLimitDetails>(command.TenantId);
             var projectsApiResult = await projectsHttpClient.GetAllProjects<IEnumerable<Project>>(command.TenantId);
             var allCurrentIntegrations = await repo.GetAllIntegrationsForProjectIds(projectsApiResult.Result.Select(p => p.ProjectId));
             if (allCurrentIntegrations.Count() >= limitsApiResponse.Result.Limit.Integrations)
             {
                 throw new RangerException("Subscription limit met");
+            }
+            if (!limitsApiResponse.Result.Active)
+            {
+                throw new RangerException("Subscription is inactive");
             }
 
             IIntegration entityIntegration;
