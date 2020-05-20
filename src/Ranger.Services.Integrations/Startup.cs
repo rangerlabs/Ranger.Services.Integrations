@@ -18,6 +18,7 @@ using Newtonsoft.Json.Serialization;
 using Ranger.ApiUtilities;
 using Ranger.Common;
 using Ranger.InternalHttpClient;
+using Ranger.Monitoring.HealthChecks;
 using Ranger.RabbitMQ;
 using Ranger.Services.Integrations.Data;
 
@@ -83,6 +84,11 @@ namespace Ranger.Services.Integrations
             services.AddDataProtection()
                 .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
                 .PersistKeysToDbContext<IntegrationsDbContext>();
+
+            services.AddLiveHealthCheck();
+            services.AddEntityFrameworkHealthCheck<IntegrationsDbContext>();
+            services.AddDockerImageTagHealthCheck();
+            services.AddRabbitMQHealthCheck();
         }
 
         public void ConfigureContainer(ContainerBuilder builder)
@@ -121,6 +127,11 @@ namespace Ranger.Services.Integrations
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHealthChecks();
+                endpoints.MapLiveTagHealthCheck();
+                endpoints.MapEfCoreTagHealthCheck();
+                endpoints.MapDockerImageTagHealthCheck();
+                endpoints.MapRabbitMQHealthCheck();
             });
 
             this.busSubscriber = app.UseRabbitMQ()
