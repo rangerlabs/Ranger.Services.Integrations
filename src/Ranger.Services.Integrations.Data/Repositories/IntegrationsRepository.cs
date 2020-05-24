@@ -9,7 +9,6 @@ using Newtonsoft.Json.Linq;
 using Npgsql;
 using Ranger.Common;
 using Ranger.Common.Data.Exceptions;
-using Ranger.Common.SharedKernel;
 
 namespace Ranger.Services.Integrations.Data
 {
@@ -32,26 +31,28 @@ namespace Ranger.Services.Integrations.Data
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
-                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
             }
             if (string.IsNullOrWhiteSpace(eventName))
             {
-                throw new ArgumentException($"{nameof(eventName)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(eventName)} was null or whitespace");
             }
             if (integration is null)
             {
-                throw new ArgumentNullException($"{nameof(integration)} was null.");
+                throw new ArgumentNullException($"{nameof(integration)} was null");
             }
 
+            var now = DateTime.UtcNow;
+            integration.CreatedOn = now;
             var newIntegrationStream = new IntegrationStream()
             {
-                DatabaseUsername = this.contextTenant.DatabaseUsername,
+                TenantId = this.contextTenant.TenantId,
                 StreamId = Guid.NewGuid(),
                 Version = 0,
                 Data = JsonConvert.SerializeObject(integration),
                 IntegrationType = integrationType,
                 Event = eventName,
-                InsertedAt = DateTime.UtcNow,
+                InsertedAt = now,
                 InsertedBy = userEmail,
             };
 
@@ -71,7 +72,7 @@ namespace Ranger.Services.Integrations.Data
                     {
                         case IntegrationJsonbConstraintNames.Name:
                             {
-                                throw new EventStreamDataConstraintException($"The integration name '{integration.Name}' is in use by another integration.");
+                                throw new EventStreamDataConstraintException($"The integration name '{integration.Name}' is in use by another integration");
                             }
                         default:
                             {
@@ -83,14 +84,58 @@ namespace Ranger.Services.Integrations.Data
             }
         }
 
-        public async Task<IEnumerable<(IIntegration integration, IntegrationsEnum integrationType, int version)>> GetAllIntegrationsForProject(Guid projectId)
+        public async Task<IEnumerable<(IIntegration integration, IntegrationsEnum integrationType)>> GetAllIntegrationsForProjectIds(IEnumerable<Guid> projectIds)
         {
-            var IntegrationStreams = await this.context.IntegrationStreams.
-            FromSqlInterpolated($@"
+            // var stringIds = $"'{String.Join("','", projectIds)}'";
+            var integrationStreams = await this.context.IntegrationStreams
+            .FromSqlRaw($@"
+                    WITH active_integrations AS(
+                        WITH max_versions AS (
+                            SELECT stream_id, MAX(version) AS version
+                            FROM integration_streams
+                            GROUP BY stream_id
+                        )
+                        select i.stream_id, i.version
+                        FROM max_versions mv, integration_streams i
+                        WHERE i.stream_id = mv.stream_id
+                        AND i.version = mv.version
+                        AND (i.data ->> 'Deleted') = 'false'
+                    )
+                    SELECT i.id,
+            	    	i.tenant_id,
+            	    	i.stream_id,
+            	    	i.version,
+            	    	i.data,
+                        i.integration_type,
+            	    	i.event,
+            	    	i.inserted_at,
+            	    	i.inserted_by
+                    FROM active_integrations ai, integration_streams i
+                    WHERE i.stream_id = ai.stream_id
+                    AND i.version = ai.version
+                    AND (i.data ->> 'ProjectId') IN ('{String.Join("','", projectIds)}');").ToListAsync();
+
+            var integrationVersionTuples = new List<(IIntegration integration, IntegrationsEnum integrationType)>();
+            foreach (var integrationStream in integrationStreams)
+            {
+                integrationVersionTuples.Add(
+                    (
+                        JsonToEntityFactory.Factory(integrationStream.IntegrationType, integrationStream.Data),
+                        integrationStream.IntegrationType
+                    )
+                );
+            }
+            return integrationVersionTuples;
+        }
+
+        public async Task<IEnumerable<(IIntegration integration, IntegrationsEnum integrationType)>> GetAllIntegrationsByIdForProject(Guid projectId, IEnumerable<Guid> integrationIds)
+        {
+            var integrationStreams = await this.context.IntegrationStreams
+            .FromSqlRaw($@"
                 WITH not_deleted AS(
 	                SELECT 
             	    	i.id,
-            	    	i.database_username,
+            	    	i.tenant_id,
             	    	i.stream_id,
             	    	i.version,
             	    	i.data,
@@ -103,7 +148,47 @@ namespace Ranger.Services.Integrations.Data
                )
                SELECT DISTINCT ON (i.stream_id) 
               		i.id,
-              		i.database_username,
+              		i.tenant_id,
+              		i.stream_id,
+              		i.version,
+                    i.data,
+                    i.integration_type,
+            		i.event,
+            		i.inserted_at,
+            		i.inserted_by
+                FROM not_deleted i
+                WHERE (i.data ->> 'IntegrationId') IN ('{String.Join("','", integrationIds)}')
+                ORDER BY i.stream_id, i.version DESC;").ToListAsync();
+            var integrationVersionTuples = new List<(IIntegration integration, IntegrationsEnum integrationType)>();
+            foreach (var integrationStream in integrationStreams)
+            {
+                var integration = JsonToEntityFactory.Factory(integrationStream.IntegrationType, integrationStream.Data);
+                integrationVersionTuples.Add((EntityToDomainFactory.Factory(integration), integrationStream.IntegrationType));
+            }
+            return integrationVersionTuples;
+        }
+
+        public async Task<IEnumerable<(IIntegration integration, IntegrationsEnum integrationType, int version)>> GetAllIntegrationsForProject(Guid projectId)
+        {
+            var integrationStreams = await this.context.IntegrationStreams.
+            FromSqlInterpolated($@"
+                WITH not_deleted AS(
+	                SELECT 
+            	    	i.id,
+            	    	i.tenant_id,
+            	    	i.stream_id,
+            	    	i.version,
+            	    	i.data,
+                        i.integration_type,
+            	    	i.event,
+            	    	i.inserted_at,
+            	    	i.inserted_by
+            	    FROM integration_streams i, integration_unique_constraints iuc
+            	    WHERE iuc.project_id = {projectId} AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
+               )
+               SELECT DISTINCT ON (i.stream_id) 
+              		i.id,
+              		i.tenant_id,
               		i.stream_id,
               		i.version,
                     i.data,
@@ -113,8 +198,8 @@ namespace Ranger.Services.Integrations.Data
             		i.inserted_by
                 FROM not_deleted i
                 ORDER BY i.stream_id, i.version DESC;").ToListAsync();
-            List<(IIntegration integration, IntegrationsEnum IntegrationType, int version)> integrationVersionTuples = new List<(IIntegration integration, IntegrationsEnum integrationType, int version)>();
-            foreach (var integrationStream in IntegrationStreams)
+            var integrationVersionTuples = new List<(IIntegration integration, IntegrationsEnum integrationType, int version)>();
+            foreach (var integrationStream in integrationStreams)
             {
                 var integration = JsonToEntityFactory.Factory(integrationStream.IntegrationType, integrationStream.Data);
                 integrationVersionTuples.Add((EntityToDomainFactory.Factory(integration), integrationStream.IntegrationType, integrationStream.Version));
@@ -133,7 +218,7 @@ namespace Ranger.Services.Integrations.Data
         {
             if (string.IsNullOrWhiteSpace(name))
             {
-                throw new ArgumentException($"{nameof(name)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(name)} was null or whitespace");
             }
 
             return await this.context.IntegrationUniqueConstraints.Where(_ => _.ProjectId == projectId && _.Name == name).Select(_ => _.IntegrationId).SingleOrDefaultAsync();
@@ -143,18 +228,18 @@ namespace Ranger.Services.Integrations.Data
         {
             if (string.IsNullOrWhiteSpace(name))
             {
-                throw new ArgumentException($"{nameof(name)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(name)} was null or whitespace");
             }
             this.context.IntegrationStreams.RemoveRange(
                 await this.context.IntegrationStreams.FromSqlInterpolated($"SELECT * FROM integration_streams WHERE data ->> 'ProjectId' = {projectId.ToString()} AND data ->> 'Name' = {name} ORDER BY version DESC").ToListAsync()
             );
         }
 
-        public async Task SoftDeleteAsync(Guid projectId, string userEmail, string name)
+        public async Task<Guid> SoftDeleteAsync(Guid projectId, string userEmail, string name)
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
-                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
             }
 
             var currentIntegrationStream = await GetIntegrationStreamByIntegrationNameAsync(projectId, name);
@@ -169,7 +254,7 @@ namespace Ranger.Services.Integrations.Data
                 {
                     var updatedIntegrationStream = new IntegrationStream()
                     {
-                        DatabaseUsername = this.contextTenant.DatabaseUsername,
+                        TenantId = this.contextTenant.TenantId,
                         StreamId = currentIntegrationStream.StreamId,
                         Version = currentIntegrationStream.Version + 1,
                         Data = JsonConvert.SerializeObject(currentIntegration),
@@ -184,7 +269,8 @@ namespace Ranger.Services.Integrations.Data
                     {
                         await this.context.SaveChangesAsync();
                         deleted = true;
-                        logger.LogInformation($"Integration {currentIntegration.Name} deleted.");
+                        logger.LogInformation($"Integration  {currentIntegration.Name} deleted");
+                        return currentIntegration.IntegrationId;
                     }
                     catch (DbUpdateException ex)
                     {
@@ -196,7 +282,7 @@ namespace Ranger.Services.Integrations.Data
                             {
                                 case IntegrationJsonbConstraintNames.IntegrationId_Version:
                                     {
-                                        logger.LogError($"The update version number was outdated. The current and updated stream versions are '{currentIntegrationStream.Version + 1}'.");
+                                        logger.LogError($"The update version number was outdated. The current and updated stream versions are '{currentIntegrationStream.Version + 1}'");
                                         maxConcurrencyAttempts--;
                                         continue;
                                     }
@@ -207,34 +293,31 @@ namespace Ranger.Services.Integrations.Data
                 }
                 if (!deleted)
                 {
-                    throw new ConcurrencyException($"After '{maxConcurrencyAttempts}' attempts, the version was still outdated. Too many updates have been applied in a short period of time. The current stream version is '{currentIntegrationStream.Version + 1}'. The integration was not deleted.");
+                    throw new ConcurrencyException($"After '{maxConcurrencyAttempts}' attempts, the version was still outdated. Too many updates have been applied in a short period of time. The current stream version is '{currentIntegrationStream.Version + 1}'. The integration was not deleted");
                 }
             }
-            else
-            {
-                throw new ArgumentException($"No integration was found with name '{name}' in project with id '{projectId}'.");
-            }
+            throw new ArgumentException($"No integration was found with name '{name}' in project with id '{projectId}'");
         }
 
         public async Task<IIntegration> UpdateIntegrationAsync(Guid projectId, string userEmail, string eventName, int version, IIntegration integration)
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
-                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
             }
             if (string.IsNullOrWhiteSpace(eventName))
             {
-                throw new ArgumentException($"{nameof(eventName)} was null or whitespace.");
+                throw new ArgumentException($"{nameof(eventName)} was null or whitespace");
             }
             if (integration is null)
             {
-                throw new ArgumentException($"{nameof(integration)} was null.");
+                throw new ArgumentException($"{nameof(integration)} was null");
             }
 
             var currentIntegrationStream = await GetIntegrationStreamByIntegrationIdAsync(projectId, integration.IntegrationId);
             if (currentIntegrationStream is null)
             {
-                throw new Exception($"No integration was found for ProjectId '{integration.ProjectId}' and Integration Id '{integration.IntegrationId}'.");
+                throw new Exception($"No integration was found for ProjectId '{integration.ProjectId}' and Integration Id '{integration.IntegrationId}'");
             }
             ValidateRequestVersionIncremented(version, currentIntegrationStream);
 
@@ -250,7 +333,7 @@ namespace Ranger.Services.Integrations.Data
 
             var updatedIntegrationStream = new IntegrationStream()
             {
-                DatabaseUsername = this.contextTenant.DatabaseUsername,
+                TenantId = this.contextTenant.TenantId,
                 StreamId = currentIntegrationStream.StreamId,
                 Version = version,
                 Data = serializedNewIntegrationData,
@@ -276,11 +359,11 @@ namespace Ranger.Services.Integrations.Data
                     {
                         case IntegrationJsonbConstraintNames.Name:
                             {
-                                throw new EventStreamDataConstraintException("The integration name is in use by another integration.");
+                                throw new EventStreamDataConstraintException("The integration name is in use by another integration");
                             }
                         case IntegrationJsonbConstraintNames.IntegrationId_Version:
                             {
-                                throw new ConcurrencyException($"The update version number was outdated. The current stream version is '{currentIntegrationStream.Version}' and the request update version was '{version}'.");
+                                throw new ConcurrencyException($"The update version number was outdated. The current stream version is '{currentIntegrationStream.Version}' and the request update version was '{version}'");
                             }
                         default:
                             {
@@ -309,7 +392,7 @@ namespace Ranger.Services.Integrations.Data
             var requestJObject = JsonConvert.DeserializeObject<JObject>(serializedNewIntegrationData);
             if (JToken.DeepEquals(currentJObject, requestJObject))
             {
-                throw new NoOpException("No changes were made from the previous version.");
+                throw new NoOpException("No changes were made from the previous version");
             }
         }
 
@@ -317,11 +400,11 @@ namespace Ranger.Services.Integrations.Data
         {
             if (version - currentIntegrationStream.Version > 1)
             {
-                throw new ConcurrencyException($"The update version number was too high. The current stream version is '{currentIntegrationStream.Version}' and the request update version was '{version}'.");
+                throw new ConcurrencyException($"The update version number was too high. The current stream version is '{currentIntegrationStream.Version}' and the request update version was '{version}'");
             }
             if (version - currentIntegrationStream.Version <= 0)
             {
-                throw new ConcurrencyException($"The update version number was outdated. The current stream version is '{currentIntegrationStream.Version}' and the request update version was '{version}'.");
+                throw new ConcurrencyException($"The update version number was outdated. The current stream version is '{currentIntegrationStream.Version}' and the request update version was '{version}'");
             }
         }
 
@@ -340,7 +423,7 @@ namespace Ranger.Services.Integrations.Data
             var newIntegrationUniqueConstraint = new IntegrationUniqueConstraint
             {
                 IntegrationId = integration.IntegrationId,
-                DatabaseUsername = contextTenant.DatabaseUsername,
+                TenantId = contextTenant.TenantId,
                 ProjectId = integration.ProjectId,
                 Name = integration.Name.ToLowerInvariant(),
             };

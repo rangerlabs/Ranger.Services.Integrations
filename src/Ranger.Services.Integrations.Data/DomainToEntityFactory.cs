@@ -1,6 +1,6 @@
 using System;
 using Newtonsoft.Json;
-using Ranger.Common.SharedKernel;
+using Ranger.Common;
 using Ranger.Services.Integrations.Data.DomainModels;
 using Ranger.Services.Integrations.Data.EntityModels;
 
@@ -31,7 +31,7 @@ namespace Ranger.Services.Integrations.Data
                     }
                 default:
                     {
-                        throw new ArgumentException($"No Integration Type associated with '{domainIntegration.GetType()}'.");
+                        throw new ArgumentException($"No Integration Type associated with '{domainIntegration.GetType()}'");
                     }
             }
         }

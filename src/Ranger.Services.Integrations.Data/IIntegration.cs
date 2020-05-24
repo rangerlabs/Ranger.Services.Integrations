@@ -1,5 +1,5 @@
 using System;
-using Ranger.Common.SharedKernel;
+using Ranger.Common;
 
 namespace Ranger.Services.Integrations.Data
 {
@@ -12,5 +12,6 @@ namespace Ranger.Services.Integrations.Data
         Guid ProjectId { get; set; }
         bool Enabled { get; set; }
         bool Deleted { get; set; }
+        DateTime CreatedOn { get; set; }
     }
 }

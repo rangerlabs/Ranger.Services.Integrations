@@ -28,7 +28,7 @@ namespace Ranger.Services.Integrations.Data.Migrations
                 {
                     id = table.Column<int>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    database_username = table.Column<string>(nullable: false),
+                    tenant_id = table.Column<string>(nullable: false),
                     stream_id = table.Column<Guid>(nullable: false),
                     version = table.Column<int>(nullable: false),
                     data = table.Column<string>(type: "jsonb", nullable: false),
@@ -47,7 +47,7 @@ namespace Ranger.Services.Integrations.Data.Migrations
                 columns: table => new
                 {
                     integration_id = table.Column<Guid>(nullable: false),
-                    database_username = table.Column<string>(nullable: false),
+                    tenant_id = table.Column<string>(nullable: false),
                     project_id = table.Column<Guid>(nullable: false),
                     name = table.Column<string>(maxLength: 140, nullable: false)
                 },
@@ -57,15 +57,15 @@ namespace Ranger.Services.Integrations.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_integration_unique_constraints_database_username_integratio~",
-                table: "integration_unique_constraints",
-                columns: new[] { "database_username", "integration_id" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_integration_unique_constraints_project_id_name",
                 table: "integration_unique_constraints",
                 columns: new[] { "project_id", "name" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_integration_unique_constraints_tenant_id_integration_id",
+                table: "integration_unique_constraints",
+                columns: new[] { "tenant_id", "integration_id" },
                 unique: true);
         }
 

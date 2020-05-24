@@ -8,14 +8,17 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
+using Ranger.ApiUtilities;
 using Ranger.Common;
 using Ranger.InternalHttpClient;
+using Ranger.Monitoring.HealthChecks;
 using Ranger.RabbitMQ;
 using Ranger.Services.Integrations.Data;
 
@@ -45,36 +48,35 @@ namespace Ranger.Services.Integrations
                     options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                 });
+            services.AddAutoWrapper();
+            services.AddSwaggerGen("Integrations API", "v1");
+            services.AddApiVersioning(o => o.ApiVersionReader = new HeaderApiVersionReader("api-version"));
 
-            services.AddAuthorization(options =>
-            {
-                options.AddPolicy("integrationsApi", policyBuilder =>
-                    {
-                        policyBuilder.RequireScope("integrationsApi");
-                    });
-            });
-            services.AddEntityFrameworkNpgsql().AddDbContext<IntegrationsDbContext>((serviceProvider, options) =>
+            services.AddDbContext<IntegrationsDbContext>((serviceProvider, options) =>
             {
                 options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
             },
                 ServiceLifetime.Transient
             );
 
-            services.AddSingleton<ITenantsClient, TenantsClient>(provider =>
-                {
-                    return new TenantsClient("http://tenants:8082", loggerFactory.CreateLogger<TenantsClient>());
-                });
+            services.AddPollyPolicyRegistry();
+            services.AddTenantsHttpClient("http://tenants:8082", "tenantsApi", "cKprgh9wYKWcsm");
+            services.AddProjectsHttpClient("http://projects:8086", "projectsApi", "usGwT8Qsp4La2");
+            services.AddSubscriptionsHttpClient("http://subscriptions:8089", "subscriptionsApi", "4T3SXqXaD6GyGHn4RY");
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddTransient<IIntegrationsDbContextInitializer, IntegrationsDbContextInitializer>();
             services.AddTransient<ILoginRoleRepository<IntegrationsDbContext>, LoginRoleRepository<IntegrationsDbContext>>();
             services.AddTransient<IIntegrationsRepository, IntegrationsRepository>();
 
+            //Typed Integration HttpClients
+            services.AddHttpClient<WebhookService>();
+
             services.AddAuthentication("Bearer")
                 .AddIdentityServerAuthentication(options =>
                 {
                     options.Authority = "http://identity:5000/auth";
-                    options.ApiName = "projectsApi";
+                    options.ApiName = "integrationsApi";
 
                     options.RequireHttpsMetadata = false;
                 });
@@ -82,6 +84,11 @@ namespace Ranger.Services.Integrations
             services.AddDataProtection()
                 .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
                 .PersistKeysToDbContext<IntegrationsDbContext>();
+
+            services.AddLiveHealthCheck();
+            services.AddEntityFrameworkHealthCheck<IntegrationsDbContext>();
+            services.AddDockerImageTagHealthCheck();
+            services.AddRabbitMQHealthCheck();
         }
 
         public void ConfigureContainer(ContainerBuilder builder)
@@ -109,11 +116,22 @@ namespace Ranger.Services.Integrations
             this.loggerFactory = loggerFactory;
             applicationLifetime.ApplicationStopping.Register(OnShutdown);
 
+            app.UseSwagger("v1", "Integrations API");
+            app.UseAutoWrapper();
+
             app.UseRouting();
+
             app.UseAuthentication();
+            app.UseAuthorization();
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHealthChecks();
+                endpoints.MapLiveTagHealthCheck();
+                endpoints.MapEfCoreTagHealthCheck();
+                endpoints.MapDockerImageTagHealthCheck();
+                endpoints.MapRabbitMQHealthCheck();
             });
 
             this.busSubscriber = app.UseRabbitMQ()
@@ -128,7 +146,9 @@ namespace Ranger.Services.Integrations
                 )
                 .SubscribeCommand<DeleteIntegration>((c, e) =>
                     new DeleteIntegrationRejected(e.Message, "")
-                );
+                )
+                .SubscribeCommand<ExecuteGeofenceIntegrations>()
+                .SubscribeCommand<EnforceIntegrationResourceLimits>();
         }
 
         private void OnShutdown()

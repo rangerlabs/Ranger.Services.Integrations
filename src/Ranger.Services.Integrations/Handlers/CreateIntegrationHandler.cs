@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -14,21 +16,36 @@ namespace Ranger.Services.Integrations.Handlers
     public class CreateIntegrationHandler : ICommandHandler<CreateIntegration>
     {
         private readonly IBusPublisher busPublisher;
-        private readonly ITenantsClient tenantsClient;
         private readonly Func<string, IntegrationsRepository> integrationsRepository;
+        private readonly SubscriptionsHttpClient subscriptionsHttpClient;
+        private readonly ProjectsHttpClient projectsHttpClient;
         private readonly ILogger<CreateIntegrationHandler> logger;
 
-        public CreateIntegrationHandler(IBusPublisher busPublisher, Func<string, IntegrationsRepository> integrationsRepository, ITenantsClient tenantsClient, ILogger<CreateIntegrationHandler> logger)
+        public CreateIntegrationHandler(IBusPublisher busPublisher, Func<string, IntegrationsRepository> integrationsRepository, SubscriptionsHttpClient subscriptionsHttpClient, ProjectsHttpClient projectsHttpClient, ILogger<CreateIntegrationHandler> logger)
         {
             this.busPublisher = busPublisher;
             this.integrationsRepository = integrationsRepository;
-            this.tenantsClient = tenantsClient;
+            this.subscriptionsHttpClient = subscriptionsHttpClient;
+            this.projectsHttpClient = projectsHttpClient;
             this.logger = logger;
         }
 
         public async Task HandleAsync(CreateIntegration command, ICorrelationContext context)
         {
-            var repo = integrationsRepository.Invoke(command.Domain);
+            var repo = integrationsRepository.Invoke(command.TenantId);
+
+            var limitsApiResponse = await subscriptionsHttpClient.GetSubscription<SubscriptionLimitDetails>(command.TenantId);
+            var projectsApiResult = await projectsHttpClient.GetAllProjects<IEnumerable<Project>>(command.TenantId);
+            var allCurrentIntegrations = await repo.GetAllIntegrationsForProjectIds(projectsApiResult.Result.Select(p => p.ProjectId));
+            if (!limitsApiResponse.Result.Active)
+            {
+                throw new RangerException("Subscription is inactive");
+            }
+            if (allCurrentIntegrations.Count() >= limitsApiResponse.Result.Limit.Integrations)
+            {
+                throw new RangerException("Subscription limit met");
+            }
+
 
             IIntegration entityIntegration;
             try
@@ -40,14 +57,14 @@ namespace Ranger.Services.Integrations.Handlers
             }
             catch (JsonSerializationException ex)
             {
-                logger.LogError(ex, "Failed to instantiate the integration from the type and message content provided.");
-                throw new RangerException($"Failed to create the integration. The requested integration was malformed.");
+                logger.LogError(ex, "Failed to instantiate the integration from the type and message content provided");
+                throw new RangerException($"Failed to create the integration. The requested integration was malformed");
             }
 
             try
             {
                 await repo.AddIntegrationAsync(command.CommandingUserEmail, "IntegrationCreated", entityIntegration, command.IntegrationType);
-                busPublisher.Publish(new IntegrationCreated(command.Domain, entityIntegration.Name, entityIntegration.IntegrationId), CorrelationContext.FromId(context.CorrelationContextId));
+                busPublisher.Publish(new IntegrationCreated(command.TenantId, entityIntegration.Name, entityIntegration.IntegrationId), CorrelationContext.FromId(context.CorrelationContextId));
             }
             catch (EventStreamDataConstraintException ex)
             {
@@ -56,8 +73,8 @@ namespace Ranger.Services.Integrations.Handlers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to create an integration.");
-                throw new RangerException("Failed to create the integration. No additional data could be provided.");
+                logger.LogError(ex, "Failed to create an integration");
+                throw new RangerException("Failed to create the integration. No additional data could be provided");
             }
         }
     }
