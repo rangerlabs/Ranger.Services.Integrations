@@ -83,7 +83,9 @@ namespace Ranger.Services.Integrations
                 });
 
             services.AddDataProtection()
+                .SetApplicationName("Integrations")
                 .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
+                .UnprotectKeysWithAnyCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
                 .PersistKeysToDbContext<IntegrationsDbContext>();
 
             services.AddLiveHealthCheck();
