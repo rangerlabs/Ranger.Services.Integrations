@@ -28,7 +28,10 @@ namespace Ranger.Services.Integrations.Handlers
             logger.LogInformation($"Executing integrations. {JsonConvert.SerializeObject(message)}");
             var repo = integrationsRepository.Invoke(message.TenantId);
 
-            var distinctIntegrations = await repo.GetAllIntegrationsByIdForProject(message.ProjectId, message.GeofenceIntegrationResults.SelectMany(_ => _.IntegrationIds).Distinct());
+            var distinctIntegrationIds = message.GeofenceIntegrationResults.SelectMany(_ => _.IntegrationIds).Distinct();
+            logger.LogDebug("Determined distinct integrations to be {DistinctIntegrationIds}", distinctIntegrationIds);
+
+            var distinctIntegrations = await repo.GetAllIntegrationsByIdForProject(message.ProjectId, distinctIntegrationIds);
 
             foreach (var geofenceIntegrationResult in message.GeofenceIntegrationResults)
             {
