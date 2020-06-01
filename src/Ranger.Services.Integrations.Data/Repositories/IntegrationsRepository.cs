@@ -9,6 +9,8 @@ using Newtonsoft.Json.Linq;
 using Npgsql;
 using Ranger.Common;
 using Ranger.Common.Data.Exceptions;
+using Ranger.Services.Integrations.Data.DomainModels;
+using Ranger.Services.Integrations.Data.EntityModels;
 
 namespace Ranger.Services.Integrations.Data
 {
@@ -27,7 +29,7 @@ namespace Ranger.Services.Integrations.Data
             this.logger = logger;
         }
 
-        public async Task AddIntegrationAsync(string userEmail, string eventName, IIntegration integration, IntegrationsEnum integrationType)
+        public async Task AddIntegrationAsync(string userEmail, string eventName, IEntityIntegration integration, IntegrationsEnum integrationType)
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
@@ -84,7 +86,7 @@ namespace Ranger.Services.Integrations.Data
             }
         }
 
-        public async Task<IEnumerable<(IIntegration integration, IntegrationsEnum integrationType)>> GetAllIntegrationsForProjectIds(IEnumerable<Guid> projectIds)
+        public async Task<IEnumerable<IDomainIntegration>> GetAllIntegrationsForProjectIds(IEnumerable<Guid> projectIds)
         {
             // var stringIds = $"'{String.Join("','", projectIds)}'";
             var integrationStreams = await this.context.IntegrationStreams
@@ -115,20 +117,20 @@ namespace Ranger.Services.Integrations.Data
                     AND i.version = ai.version
                     AND (i.data ->> 'ProjectId') IN ('{String.Join("','", projectIds)}');").ToListAsync();
 
-            var integrationVersionTuples = new List<(IIntegration integration, IntegrationsEnum integrationType)>();
+            var integrationVersionTuples = new List<IDomainIntegration>();
             foreach (var integrationStream in integrationStreams)
             {
+                var integration = JsonToEntityFactory.Factory(integrationStream.IntegrationType, integrationStream.Data);
                 integrationVersionTuples.Add(
                     (
-                        JsonToEntityFactory.Factory(integrationStream.IntegrationType, integrationStream.Data),
-                        integrationStream.IntegrationType
+                        EntityToDomainFactory.Factory(integration)
                     )
                 );
             }
             return integrationVersionTuples;
         }
 
-        public async Task<IEnumerable<(IIntegration integration, IntegrationsEnum integrationType)>> GetAllIntegrationsByIdForProject(Guid projectId, IEnumerable<Guid> integrationIds)
+        public async Task<IEnumerable<IDomainIntegration>> GetAllIntegrationsByIdForProject(Guid projectId, IEnumerable<Guid> integrationIds)
         {
             var integrationStreams = await this.context.IntegrationStreams
             .FromSqlRaw($@"
@@ -159,16 +161,16 @@ namespace Ranger.Services.Integrations.Data
                 FROM not_deleted i
                 WHERE (i.data ->> 'IntegrationId') IN ('{String.Join("','", integrationIds)}')
                 ORDER BY i.stream_id, i.version DESC;").ToListAsync();
-            var integrationVersionTuples = new List<(IIntegration integration, IntegrationsEnum integrationType)>();
+            var integrationVersionTuples = new List<IDomainIntegration>();
             foreach (var integrationStream in integrationStreams)
             {
                 var integration = JsonToEntityFactory.Factory(integrationStream.IntegrationType, integrationStream.Data);
-                integrationVersionTuples.Add((EntityToDomainFactory.Factory(integration), integrationStream.IntegrationType));
+                integrationVersionTuples.Add((EntityToDomainFactory.Factory(integration)));
             }
             return integrationVersionTuples;
         }
 
-        public async Task<IEnumerable<(IIntegration integration, IntegrationsEnum integrationType, int version)>> GetAllIntegrationsForProject(Guid projectId)
+        public async Task<IEnumerable<(IDomainIntegration integration, IntegrationsEnum integrationType, int version)>> GetAllIntegrationsForProject(Guid projectId)
         {
             var integrationStreams = await this.context.IntegrationStreams.
             FromSqlInterpolated($@"
@@ -198,7 +200,7 @@ namespace Ranger.Services.Integrations.Data
             		i.inserted_by
                 FROM not_deleted i
                 ORDER BY i.stream_id, i.version DESC;").ToListAsync();
-            var integrationVersionTuples = new List<(IIntegration integration, IntegrationsEnum integrationType, int version)>();
+            var integrationVersionTuples = new List<(IDomainIntegration integration, IntegrationsEnum integrationType, int version)>();
             foreach (var integrationStream in integrationStreams)
             {
                 var integration = JsonToEntityFactory.Factory(integrationStream.IntegrationType, integrationStream.Data);
@@ -207,11 +209,12 @@ namespace Ranger.Services.Integrations.Data
             return integrationVersionTuples;
         }
 
-        public async Task<IIntegration> GetIntegrationByIntegrationIdAsync(Guid projectId, Guid integrationId)
+        public async Task<IDomainIntegration> GetIntegrationByIntegrationIdAsync(Guid projectId, Guid integrationId)
         {
             var integrationStream = await this.context.IntegrationStreams.FromSqlInterpolated($"SELECT * FROM integration_streams WHERE data ->> 'ProjectId' = {projectId.ToString()} AND data ->> 'Id' = {integrationId.ToString()} AND data ->> 'Deleted' = 'false' ORDER BY version DESC").FirstOrDefaultAsync();
-            var type = EntityIntegrationTypeFactory.Factory(integrationStream.IntegrationType);
-            return JsonConvert.DeserializeObject(integrationStream.Data, type) as IIntegration;
+
+            var integration = JsonToEntityFactory.Factory(integrationStream.IntegrationType, integrationStream.Data);
+            return EntityToDomainFactory.Factory(integration);
         }
 
         public async Task<Guid> GetIntegrationIdByCurrentNameAsync(Guid projectId, string name)
@@ -299,7 +302,7 @@ namespace Ranger.Services.Integrations.Data
             throw new ArgumentException($"No integration was found with name '{name}' in project with id '{projectId}'");
         }
 
-        public async Task<IIntegration> UpdateIntegrationAsync(Guid projectId, string userEmail, string eventName, int version, IIntegration integration)
+        public async Task UpdateIntegrationAsync(Guid projectId, string userEmail, string eventName, int version, IEntityIntegration integration)
         {
             if (string.IsNullOrWhiteSpace(userEmail))
             {
@@ -373,7 +376,6 @@ namespace Ranger.Services.Integrations.Data
                 }
                 throw;
             }
-            return integration;
         }
 
         private async Task<IntegrationStream> GetIntegrationStreamByIntegrationNameAsync(Guid projectId, string name)

@@ -8,6 +8,7 @@ using Ranger.Common.Data.Exceptions;
 using Ranger.InternalHttpClient;
 using Ranger.RabbitMQ;
 using Ranger.Services.Integrations.Data;
+using Ranger.Services.Integrations.Data.EntityModels;
 
 namespace Ranger.Services.Integrations.Handlers
 {
@@ -28,7 +29,7 @@ namespace Ranger.Services.Integrations.Handlers
         {
             var repo = integrationsRepository.Invoke(command.TenantId);
 
-            IIntegration entityIntegration;
+            IEntityIntegration entityIntegration;
             try
             {
                 var domainIntegration = JsonToDomainFactory.Factory(command.IntegrationType, command.MessageJsonContent);

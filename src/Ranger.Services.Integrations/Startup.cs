@@ -99,6 +99,8 @@ namespace Ranger.Services.Integrations
             builder.RegisterInstance<CloudSqlOptions>(configuration.GetOptions<CloudSqlOptions>("cloudSql"));
             builder.RegisterType<IntegrationsDbContext>().InstancePerDependency();
             builder.RegisterType<TenantServiceDbContext>();
+            builder.RegisterTypes().Where(t => t.IsAssignableTo<IIntegrationStrategy>()).AsSelf().InstancePerDependency();
+            builder.RegisterType<IntegrationStrategyExecutor>().InstancePerDependency();
             builder.Register((c, p) =>
             {
                 var provider = c.Resolve<TenantServiceDbContext>();

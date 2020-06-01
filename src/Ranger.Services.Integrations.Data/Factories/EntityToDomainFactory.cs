@@ -1,8 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using Ranger.Common;
 using Ranger.Services.Integrations.Data.DomainModels;
 using Ranger.Services.Integrations.Data.EntityModels;
 
@@ -10,7 +8,7 @@ namespace Ranger.Services.Integrations.Data
 {
     public static class EntityToDomainFactory
     {
-        public static IDomainIntegration Factory(IEntityIntegration entityIntegration)
+        internal static IDomainIntegration Factory(IEntityIntegration entityIntegration)
         {
             switch (entityIntegration)
             {

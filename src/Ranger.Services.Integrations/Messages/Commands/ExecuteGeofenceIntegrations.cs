@@ -22,10 +22,8 @@ namespace Ranger.Services.Integrations
                 throw new ArgumentException($"{nameof(tenantId)} was null or whitespace");
             }
 
-            this.GeofenceIntegrationResults = geofenceIntegrationResults ??
-                throw new ArgumentNullException(nameof(geofenceIntegrationResults));
-            this.Breadcrumb = breadcrumb ??
-                throw new ArgumentNullException(nameof(breadcrumb));
+            this.GeofenceIntegrationResults = geofenceIntegrationResults ?? throw new ArgumentNullException(nameof(geofenceIntegrationResults));
+            this.Breadcrumb = breadcrumb ?? throw new ArgumentNullException(nameof(breadcrumb));
             this.ProjectId = projectId;
             this.TenantId = tenantId;
         }

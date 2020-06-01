@@ -13,12 +13,14 @@ namespace Ranger.Services.Integrations.Handlers
         private readonly IBusPublisher busPublisher;
         private readonly ILogger<ExecuteIntegrationsHandler> logger;
         private readonly Func<string, IntegrationsRepository> integrationsRepository;
+        private readonly IntegrationStrategyExecutor integrationExecutor;
 
-        public ExecuteIntegrationsHandler(IBusPublisher busPublisher, ILogger<ExecuteIntegrationsHandler> logger, Func<string, IntegrationsRepository> integrationsRepository)
+        public ExecuteIntegrationsHandler(IBusPublisher busPublisher, ILogger<ExecuteIntegrationsHandler> logger, Func<string, IntegrationsRepository> integrationsRepository, IntegrationStrategyExecutor integrationExecutor)
         {
             this.busPublisher = busPublisher;
             this.logger = logger;
             this.integrationsRepository = integrationsRepository;
+            this.integrationExecutor = integrationExecutor;
         }
 
         public async Task HandleAsync(ExecuteGeofenceIntegrations message, ICorrelationContext context)
@@ -26,7 +28,18 @@ namespace Ranger.Services.Integrations.Handlers
             logger.LogInformation($"Executing integrations. {JsonConvert.SerializeObject(message)}");
             var repo = integrationsRepository.Invoke(message.TenantId);
 
-            var projectIntegrations = await repo.GetAllIntegrationsByIdForProject(message.ProjectId, message.GeofenceIntegrationResults.SelectMany(_ => _.IntegrationIds));
+            var distinctIntegrations = await repo.GetAllIntegrationsByIdForProject(message.ProjectId, message.GeofenceIntegrationResults.SelectMany(_ => _.IntegrationIds).Distinct());
+
+            foreach (var geofenceIntegrationResult in message.GeofenceIntegrationResults)
+            {
+                var integrations = distinctIntegrations.Where(i => distinctIntegrations.Select(_ => _.IntegrationId)
+                                                                                       .Intersect(geofenceIntegrationResult.IntegrationIds)
+                                                                                       .Contains(i.IntegrationId) && i.Environment == message.Environment);
+                foreach (var integration in integrations)
+                {
+                    await integrationExecutor.Execute(integration, geofenceIntegrationResult);
+                }
+            }
             return;
         }
     }

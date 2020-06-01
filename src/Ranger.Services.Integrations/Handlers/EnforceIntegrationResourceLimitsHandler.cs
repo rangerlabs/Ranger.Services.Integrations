@@ -33,11 +33,11 @@ namespace Ranger.Services.Integrations.Handlers
                 if (integrations.Count() > tenantLimit.limit)
                 {
                     var exceededByCount = integrations.Count() - tenantLimit.limit;
-                    var integrationsToRemove = integrations.OrderByDescending(p => p.integration.CreatedOn).Take(exceededByCount);
+                    var integrationsToRemove = integrations.OrderByDescending(p => p.CreatedOn).Take(exceededByCount);
                     foreach (var projectToRemove in integrationsToRemove)
                     {
-                        await repo.SoftDeleteAsync(projectToRemove.integration.ProjectId, "SubscriptionEnforcer", projectToRemove.integration.Name);
-                        busPublisher.Send(new PurgeIntegrationFromGeofences(tenantLimit.tenantId, projectToRemove.integration.ProjectId, projectToRemove.integration.IntegrationId), context);
+                        await repo.SoftDeleteAsync(projectToRemove.ProjectId, "SubscriptionEnforcer", projectToRemove.Name);
+                        busPublisher.Send(new PurgeIntegrationFromGeofences(tenantLimit.tenantId, projectToRemove.ProjectId, projectToRemove.IntegrationId), context);
                     }
                 }
             }
