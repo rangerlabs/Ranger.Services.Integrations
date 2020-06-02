@@ -22,13 +22,13 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
             this.GeofenceExternalId = geofenceExternalId;
             this.GeofenceDescription = geofenceDescription;
             this.GeofenceMetadata = geofenceMetadata;
-            this.GeofenceEvent = geofenceEvent;
+            this.GeofenceEvent = Enum.GetName(typeof(GeofenceEventEnum), geofenceEvent);
         }
 
         public Guid GeofenceId { get; }
         public string GeofenceExternalId { get; }
         public string GeofenceDescription { get; }
         public IEnumerable<KeyValuePair<string, string>> GeofenceMetadata { get; }
-        public GeofenceEventEnum GeofenceEvent { get; }
+        public string GeofenceEvent { get; }
     }
 }
