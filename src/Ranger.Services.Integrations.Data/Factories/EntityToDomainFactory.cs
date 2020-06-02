@@ -23,7 +23,8 @@ namespace Ranger.Services.Integrations.Data
                             Description = e.Description,
                             Enabled = e.Enabled,
                             Deleted = e.Deleted,
-                            Url = e.Url
+                            Url = e.Url,
+                            SigningKey = e.SigningKey
                         };
                         domainIntegration.Headers = JsonConvert.DeserializeObject<IEnumerable<KeyValuePair<string, string>>>(e.Headers);
                         domainIntegration.Metadata = JsonConvert.DeserializeObject<IEnumerable<KeyValuePair<string, string>>>(e.Metadata);

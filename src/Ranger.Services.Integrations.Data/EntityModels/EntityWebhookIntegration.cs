@@ -17,6 +17,8 @@ namespace Ranger.Services.Integrations.Data.EntityModels
         [Required]
         public string Url { get; set; }
         [Required]
+        public string SigningKey { get; set; }
+        [Required]
         public EnvironmentEnum Environment { get; set; }
         public string Headers { get; set; }
         public string Metadata { get; set; }
