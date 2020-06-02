@@ -12,7 +12,6 @@ namespace Ranger.Services.Integrations.Data.DomainModels
         public string Description { get; set; }
         public Guid ProjectId { get; set; }
         public string Url { get; set; }
-        [JsonIgnore]
         public string SigningKey { get; set; }
         public EnvironmentEnum Environment { get; set; }
         public IEnumerable<KeyValuePair<string, string>> Headers { get; set; }
