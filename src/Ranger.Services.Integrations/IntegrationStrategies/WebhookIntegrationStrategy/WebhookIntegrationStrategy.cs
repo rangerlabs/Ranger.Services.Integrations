@@ -16,11 +16,9 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
         private readonly ILogger<WebhookIntegrationStrategy> logger;
         private readonly IHttpClientFactory httpClientFactory;
         private readonly HttpClient httpClient;
-        private readonly IServiceCollection services;
 
-        public WebhookIntegrationStrategy(ILogger<WebhookIntegrationStrategy> logger, IHttpClientFactory httpClientFactory, IServiceCollection services)
+        public WebhookIntegrationStrategy(ILogger<WebhookIntegrationStrategy> logger, IHttpClientFactory httpClientFactory)
         {
-            this.services = services;
             this.logger = logger;
             this.httpClientFactory = httpClientFactory;
         }
@@ -29,15 +27,7 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
         {
             logger.LogInformation("Executing Webhook Integration Strategy for integration {Integration} in project {Project}", integration.IntegrationId, projectName);
             var httpClientId = $"webhook-{tenantId}-{integration.IntegrationId}";
-            try
-            {
-                services.AddHttpClient(httpClientId).SetHandlerLifetime(TimeSpan.FromMinutes(10));
-            }
-            catch (Exception ex)
-            {
-                logger.LogDebug(ex, "Failed to add new HttpClient {HttpClientId} to the service collection", httpClientId);
-            }
-            var httpClient = httpClientFactory.CreateClient(httpClientId);
+            using var httpClient = httpClientFactory.CreateClient(httpClientId);
 
             foreach (var header in integration.Headers)
             {
@@ -48,7 +38,7 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
                 catch (Exception ex)
                 {
                     logger.LogDebug("Invalid header. {Reason} - {HeaderName}: {HeaderValue}", ex.Message, header.Key, header.Value);
-                    throw new RangerException("Invalid header resulting in a failed webhook request.");
+                    throw new RangerException("Invalid header resulting in a failed webhook request");
                 }
             }
 
