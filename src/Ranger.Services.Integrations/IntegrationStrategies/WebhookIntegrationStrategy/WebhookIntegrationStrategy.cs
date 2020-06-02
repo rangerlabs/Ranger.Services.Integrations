@@ -96,7 +96,7 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
         {
             using var sha1 = new HMACSHA1(Encoding.UTF8.GetBytes(signingKey));
             var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(content.Id));
-            httpRequestMessage.Headers.Add(HeaderName, Encoding.UTF8.GetString(hash));
+            httpRequestMessage.Headers.Add(HeaderName, BitConverter.ToString(hash));
         }
     }
 }
