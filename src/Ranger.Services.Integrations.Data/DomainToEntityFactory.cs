@@ -22,7 +22,8 @@ namespace Ranger.Services.Integrations.Data
                             Description = d.Description,
                             Enabled = d.Enabled,
                             Deleted = d.Deleted,
-                            Url = d.Url
+                            Url = d.Url,
+                            SigningKey = d.SigningKey
                         };
                         entityIntegration.Headers = JsonConvert.SerializeObject(d.Headers) ?? "[]";
                         entityIntegration.Metadata = JsonConvert.SerializeObject(d.Metadata) ?? "[]";
