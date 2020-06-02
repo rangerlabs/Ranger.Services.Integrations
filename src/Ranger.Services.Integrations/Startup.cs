@@ -21,6 +21,7 @@ using Ranger.InternalHttpClient;
 using Ranger.Monitoring.HealthChecks;
 using Ranger.RabbitMQ;
 using Ranger.Services.Integrations.Data;
+using Ranger.Services.Integrations.IntegrationStrategies;
 
 namespace Ranger.Services.Integrations
 {

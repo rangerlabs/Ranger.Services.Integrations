@@ -33,17 +33,11 @@ namespace Ranger.Services.Integrations.Handlers
 
             var distinctIntegrations = await repo.GetAllIntegrationsByIdForProject(message.ProjectId, distinctIntegrationIds);
 
-            foreach (var geofenceIntegrationResult in message.GeofenceIntegrationResults)
+            foreach (var integration in distinctIntegrations)
             {
-                var integrations = distinctIntegrations.Where(i => distinctIntegrations.Select(_ => _.IntegrationId)
-                                                                                       .Intersect(geofenceIntegrationResult.IntegrationIds)
-                                                                                       .Contains(i.IntegrationId) && i.Environment == message.Environment);
-                foreach (var integration in integrations)
-                {
-                    await integrationExecutor.Execute(integration, geofenceIntegrationResult);
-                }
+                var geofenceResults = message.GeofenceIntegrationResults.Where(gri => gri.IntegrationIds.Contains(integration.IntegrationId));
+                await integrationExecutor.Execute(message.TenantId, message.ProjectName, integration, geofenceResults, message.Breadcrumb, message.Environment);
             }
-            return;
         }
     }
 }
