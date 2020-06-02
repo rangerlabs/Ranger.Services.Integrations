@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Cryptography.X509Certificates;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -49,6 +51,9 @@ namespace Ranger.Services.Integrations
                     options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                 });
+
+            services.AddWebhookIntegrationHttpClient();
+
             services.AddAutoWrapper();
             services.AddSwaggerGen("Integrations API", "v1");
             services.AddApiVersioning(o => o.ApiVersionReader = new HeaderApiVersionReader("api-version"));

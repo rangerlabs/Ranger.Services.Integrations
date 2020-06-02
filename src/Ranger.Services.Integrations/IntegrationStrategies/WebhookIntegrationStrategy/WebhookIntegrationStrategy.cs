@@ -2,10 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Ranger.Common;
 using Ranger.Services.Integrations.Data.DomainModels;
 
@@ -16,6 +19,7 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
         private readonly ILogger<WebhookIntegrationStrategy> logger;
         private readonly IHttpClientFactory httpClientFactory;
         private readonly HttpClient httpClient;
+        private readonly string HeaderName = "x-ranger-signature";
 
         public WebhookIntegrationStrategy(ILogger<WebhookIntegrationStrategy> logger, IHttpClientFactory httpClientFactory)
         {
@@ -26,14 +30,42 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
         public async Task Execute(string tenantId, string projectName, DomainWebhookIntegration integration, IEnumerable<GeofenceIntegrationResult> geofenceIntegrationResults, Breadcrumb breadcrumb, EnvironmentEnum environment)
         {
             logger.LogInformation("Executing Webhook Integration Strategy for integration {Integration} in project {Project}", integration.IntegrationId, projectName);
-            var httpClientId = $"webhook-{tenantId}-{integration.IntegrationId}";
-            using var httpClient = httpClientFactory.CreateClient(httpClientId);
+            var httpClient = httpClientFactory.CreateClient(WebhookExtensions.HttpClientName);
+            var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, integration.Url);
 
+            AddIntegrationSpecificHeaders(integration, httpRequestMessage);
+            var content = GetWebhookIntegrationContent(projectName, integration, geofenceIntegrationResults, breadcrumb, environment);
+            SignWebhookRequest(httpRequestMessage, content, integration.SigningKey);
+            SerializeContent(httpRequestMessage, content);
+            try
+            {
+                var result = await httpClient.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead);
+                logger.LogDebug("Received status code {StatusCode} from webhook integration", result.StatusCode);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("Failed to execute webhook successfully - {Reason}", ex.Message);
+            }
+        }
+
+        private static void SerializeContent(HttpRequestMessage httpRequestMessage, WebhookIntegrationContent content)
+        {
+            httpRequestMessage.Content = new StringContent(JsonConvert.SerializeObject(content, new JsonSerializerSettings
+            {
+                ContractResolver = new DefaultContractResolver
+                {
+                    NamingStrategy = new CamelCaseNamingStrategy()
+                }
+            }));
+        }
+
+        private void AddIntegrationSpecificHeaders(DomainWebhookIntegration integration, HttpRequestMessage httpRequestMessage)
+        {
             foreach (var header in integration.Headers)
             {
                 try
                 {
-                    httpClient.DefaultRequestHeaders.Add(header.Key, header.Value);
+                    httpRequestMessage.Headers.Add(header.Key, header.Value);
                 }
                 catch (Exception ex)
                 {
@@ -41,8 +73,11 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
                     throw new RangerException("Invalid header resulting in a failed webhook request");
                 }
             }
+        }
 
-            var content = new WebhookIntegrationContent
+        private static WebhookIntegrationContent GetWebhookIntegrationContent(string projectName, DomainWebhookIntegration integration, IEnumerable<GeofenceIntegrationResult> geofenceIntegrationResults, Breadcrumb breadcrumb, EnvironmentEnum environment)
+        {
+            return new WebhookIntegrationContent
             {
                 Id = Guid.NewGuid().ToString("N"),
                 Project = projectName,
@@ -55,16 +90,13 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
                     g.GeofenceEvent)),
                 IntegrationMetadata = integration.Metadata,
             };
+        }
 
-            try
-            {
-                var result = await httpClient.PostAsync(integration.Url, new StringContent(JsonConvert.SerializeObject(content)));
-                logger.LogWarning("Received status code {StatusCode} from webhook integration", result.StatusCode);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed to execute webhook successfully.");
-            }
+        private void SignWebhookRequest(HttpRequestMessage httpRequestMessage, WebhookIntegrationContent content, string signingKey)
+        {
+            using var sha1 = new HMACSHA1(Encoding.UTF8.GetBytes(signingKey));
+            var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(content.Id));
+            httpRequestMessage.Headers.Add(HeaderName, Encoding.UTF8.GetString(hash));
         }
     }
 }

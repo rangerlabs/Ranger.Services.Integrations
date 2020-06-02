@@ -1,19 +1,32 @@
 using System;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Ranger.Services.Integrations
+namespace Ranger.Services.Integrations.IntegrationStrategies
 {
-    public class WebhookExtensions
-    {
-        static IServiceCollection AddWebhookHttpClient(IServiceCollection services, string tenantId)
-        {
-            if (string.IsNullOrWhiteSpace(tenantId))
-            {
-                throw new ArgumentException($"'{nameof(tenantId)}' was null or whitespace", nameof(tenantId));
-            }
 
-            services.AddHttpClient(tenantId).SetHandlerLifetime(TimeSpan.FromHours(2));
-            return services;
+
+    public static class WebhookExtensions
+    {
+        public static readonly string HttpClientName = "webhook";
+        public static void AddWebhookIntegrationHttpClient(this IServiceCollection services)
+        {
+            services.AddHttpClient(HttpClientName, c =>
+            {
+                c.Timeout = TimeSpan.FromSeconds(7);
+                c.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                c.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue
+                {
+                    NoCache = true,
+                    NoStore = true,
+                    MaxAge = new TimeSpan(0),
+                    MustRevalidate = true
+                };
+            }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                AllowAutoRedirect = false
+            });
         }
     }
 }
