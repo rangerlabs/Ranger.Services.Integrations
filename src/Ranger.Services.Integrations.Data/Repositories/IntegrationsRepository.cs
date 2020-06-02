@@ -327,6 +327,7 @@ namespace Ranger.Services.Integrations.Data
             var outdatedIntegration = JsonToEntityFactory.Factory(currentIntegrationStream.IntegrationType, currentIntegrationStream.Data);
             integration.ProjectId = outdatedIntegration.ProjectId;
             integration.Deleted = false;
+            integration.CreatedOn = outdatedIntegration.CreatedOn;
 
             var serializedNewIntegrationData = JsonConvert.SerializeObject(integration);
             ValidateDataJsonInequality(currentIntegrationStream, serializedNewIntegrationData);
