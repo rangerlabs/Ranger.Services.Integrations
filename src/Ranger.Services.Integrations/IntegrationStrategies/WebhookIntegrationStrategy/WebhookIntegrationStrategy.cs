@@ -56,7 +56,7 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
                 {
                     NamingStrategy = new CamelCaseNamingStrategy()
                 }
-            }));
+            }), Encoding.UTF8, "application/json");
         }
 
         private void AddIntegrationSpecificHeaders(DomainWebhookIntegration integration, HttpRequestMessage httpRequestMessage)
