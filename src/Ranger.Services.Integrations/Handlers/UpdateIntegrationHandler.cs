@@ -37,7 +37,7 @@ namespace Ranger.Services.Integrations.Handlers
             }
             catch (JsonSerializationException ex)
             {
-                logger.LogError(ex, "Failed to instantiate the integration from the type and message content provided");
+                logger.LogDebug(ex, "Failed to instantiate the integration from the type and message content provided");
                 throw new RangerException($"Failed to update the integration. The requested integration was malformed");
             }
 
@@ -48,18 +48,18 @@ namespace Ranger.Services.Integrations.Handlers
             }
             catch (EventStreamDataConstraintException ex)
             {
-                logger.LogWarning(ex.Message);
+                logger.LogDebug(ex, "Failed to update integration {IntegrationName}", entityIntegration.Name);
                 throw new RangerException(ex.Message);
             }
             catch (NoOpException ex)
             {
-                logger.LogWarning(ex.Message);
+                logger.LogDebug(ex, "Failed to update integration {IntegrationName}", entityIntegration.Name);
                 throw new RangerException(ex.Message);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to create an integration");
-                throw new RangerException("Failed to update the integration. No additional data could be provided");
+                logger.LogError(ex, "An unexpected error occurred updating integration {IntegrationName}", entityIntegration.Name);
+                throw new RangerException($"An unexpected error occurred updating integration '{entityIntegration.Name}'");
             }
         }
     }

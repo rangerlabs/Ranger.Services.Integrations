@@ -33,13 +33,13 @@ namespace Ranger.Services.Integrations.Handlers
             }
             catch (ConcurrencyException ex)
             {
-                logger.LogWarning(ex.Message);
+                logger.LogDebug(ex, "Failed to delete the integration {Name}", command.Name);
                 throw new RangerException(ex.Message);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to delete integration");
-                throw new RangerException("Failed to delete the integration. No additional data could be provided");
+                logger.LogError(ex, "An unexpected error occurred deleting integration {Name}", command.Name);
+                throw new RangerException($"An unexpected error occurred deleting integration '{command.Name}'");
             }
         }
     }
