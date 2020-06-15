@@ -367,7 +367,7 @@ namespace Ranger.Services.Integrations.Data
                             }
                         case IntegrationJsonbConstraintNames.IntegrationId_Version:
                             {
-                                throw new ConcurrencyException($"The update version number was outdated. The current stream version is '{currentIntegrationStream.Version}' and the request update version was '{version}'");
+                                throw new ConcurrencyException($"The version number '{version}' was outdated. The current resource is at version '{currentIntegrationStream.Version}'. Re-request the resource to view the latest changes");
                             }
                         default:
                             {
@@ -403,11 +403,11 @@ namespace Ranger.Services.Integrations.Data
         {
             if (version - currentIntegrationStream.Version > 1)
             {
-                throw new ConcurrencyException($"The update version number was too high. The current stream version is '{currentIntegrationStream.Version}' and the request update version was '{version}'");
+                throw new ConcurrencyException($"The version number '{version}' was too high. The current resource is at version '{currentIntegrationStream.Version}'");
             }
             if (version - currentIntegrationStream.Version <= 0)
             {
-                throw new ConcurrencyException($"The update version number was outdated. The current stream version is '{currentIntegrationStream.Version}' and the request update version was '{version}'");
+                throw new ConcurrencyException($"The version number '{version}' was outdated. The current resource is at version '{currentIntegrationStream.Version}'. Re-request the resource to view the latest changes");
             }
         }
 
