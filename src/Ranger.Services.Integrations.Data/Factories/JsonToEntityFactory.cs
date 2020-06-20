@@ -1,5 +1,6 @@
 using System;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Ranger.Common;
 using Ranger.Services.Integrations.Data.EntityModels;
 
@@ -13,7 +14,7 @@ namespace Ranger.Services.Integrations.Data
             {
                 case IntegrationsEnum.WEBHOOK:
                     {
-                        return JsonConvert.DeserializeObject<EntityWebhookIntegration>(jsonContent, new JsonSerializerSettings { MissingMemberHandling = MissingMemberHandling.Error });
+                        return JsonConvert.DeserializeObject<EntityWebhookIntegration>(jsonContent, new JsonSerializerSettings { Converters = new[] { new StringEnumConverter() }, MissingMemberHandling = MissingMemberHandling.Error });
                     }
                 default:
                     {

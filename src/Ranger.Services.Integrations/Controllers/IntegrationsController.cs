@@ -89,14 +89,14 @@ namespace Ranger.Services.Integrations
             }
         }
 
-        [NonAction]
-        private string getIntegrationTypeFriendlyName(IntegrationsEnum integration)
-        {
-            return integration switch
-            {
-                IntegrationsEnum.WEBHOOK => "Webhook",
-                _ => throw new ArgumentException($"Invalid integration type {integration}")
-            };
-        }
+        // [NonAction]
+        // private string getIntegrationTypeFriendlyName(IntegrationsEnum integration)
+        // {
+        //     return integration switch
+        //     {
+        //         IntegrationsEnum.WEBHOOK => "Webhook",
+        //         _ => throw new ArgumentException($"Invalid integration type {integration}")
+        //     };
+        // }
     }
 }
