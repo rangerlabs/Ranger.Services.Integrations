@@ -49,11 +49,11 @@ namespace Ranger.Services.Integrations
                 {
                     dynamic integration = new ExpandoObject();
                     integration.Type = getIntegrationTypeFriendlyName(result.integrationType);
-                    integration.Environment = getIntegrationEnvironmentFriendlyName(integration.Environment);
-                    foreach (var propertyInfo in result.integration.GetType().GetProperties().Where(_ => _.Name.ToLowerInvariant() != "deleted"))
+                    foreach (var propertyInfo in result.integration.GetType().GetProperties().Where(_ => _.Name.ToLowerInvariant() != "deleted" || _.Name.ToLowerInvariant() != "environment"))
                     {
                         ((IDictionary<String, Object>)integration).Add(propertyInfo.Name, propertyInfo.GetValue(result.integration));
                     }
+                    integration.Environment = getIntegrationEnvironmentFriendlyName(result.integration.Environment);
                     integration.Version = result.version;
                     integrationsList.Add(integration);
                 }
