@@ -48,7 +48,7 @@ namespace Ranger.Services.Integrations
                 foreach (var result in integrationVersionTuples)
                 {
                     dynamic integration = new ExpandoObject();
-                    integration.Type = getIntegrationTypeFriendlyName(result.integrationType);
+                    integration.Type = result.integrationType;
                     foreach (var propertyInfo in result.integration.GetType().GetProperties().Where(_ => _.Name.ToLowerInvariant() != "deleted"))
                     {
                         ((IDictionary<String, Object>)integration).Add(propertyInfo.Name, propertyInfo.GetValue(result.integration));
