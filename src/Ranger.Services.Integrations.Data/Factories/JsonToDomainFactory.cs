@@ -14,7 +14,7 @@ namespace Ranger.Services.Integrations.Data
             {
                 case IntegrationsEnum.WEBHOOK:
                     {
-                        var webhookIntegration = JsonConvert.DeserializeObject<DomainWebhookIntegration>(jsonContent, new JsonSerializerSettings { Converters = new[] { new StringEnumConverter() }, MissingMemberHandling = MissingMemberHandling.Ignore });
+                        var webhookIntegration = JsonConvert.DeserializeObject<DomainWebhookIntegration>(jsonContent, new JsonSerializerSettings { MissingMemberHandling = MissingMemberHandling.Ignore });
                         webhookIntegration.SigningKey = Crypto.GenerateSudoRandomAlphaNumericString(64);
                         return webhookIntegration;
                     }
