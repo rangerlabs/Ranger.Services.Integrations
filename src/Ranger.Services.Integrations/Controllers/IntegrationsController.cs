@@ -48,7 +48,7 @@ namespace Ranger.Services.Integrations
                 foreach (var result in integrationVersionTuples)
                 {
                     dynamic integration = new ExpandoObject();
-                    integration.Type = Enum.GetName(typeof(IntegrationsEnum), result.integrationType);
+                    integration.Type = getIntegrationTypeFriendlyName(result.integrationType);
                     foreach (var propertyInfo in result.integration.GetType().GetProperties().Where(_ => _.Name.ToLowerInvariant() != "deleted"))
                     {
                         ((IDictionary<String, Object>)integration).Add(propertyInfo.Name, propertyInfo.GetValue(result.integration));
@@ -87,6 +87,16 @@ namespace Ranger.Services.Integrations
                 this.logger.LogError(ex, message);
                 throw new ApiException(message, StatusCodes.Status500InternalServerError);
             }
+        }
+
+        [NonAction]
+        private string getIntegrationTypeFriendlyName(IntegrationsEnum integration)
+        {
+            return integration switch
+            {
+                IntegrationsEnum.WEBHOOK => "Webhook",
+                _ => throw new ArgumentException($"Invalid integration type {integration}")
+            };
         }
     }
 }
