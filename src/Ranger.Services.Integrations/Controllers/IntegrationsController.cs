@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Ranger.Common;
 using Ranger.InternalHttpClient;
 using Ranger.Services.Integrations.Data;
+using Ranger.Services.Integrations.Data.DomainModels;
 
 namespace Ranger.Services.Integrations
 {
@@ -48,13 +49,7 @@ namespace Ranger.Services.Integrations
                 foreach (var result in integrationVersionTuples)
                 {
                     dynamic integration = new ExpandoObject();
-                    integration.Type = getIntegrationTypeFriendlyName(result.integrationType);
-                    foreach (var propertyInfo in result.integration.GetType().GetProperties().Where(_ => _.Name.ToLowerInvariant() != "deleted" || _.Name.ToLowerInvariant() != "environment"))
-                    {
-                        ((IDictionary<String, Object>)integration).Add(propertyInfo.Name, propertyInfo.GetValue(result.integration));
-                    }
-                    integration.Environment = getIntegrationEnvironmentFriendlyName(result.integration.Environment);
-                    integration.Version = result.version;
+                    mapIntegrationToDynamic(result, integration);
                     integrationsList.Add(integration);
                 }
                 return new ApiResponse("Successfully retrived integrations", integrationsList);
@@ -65,6 +60,17 @@ namespace Ranger.Services.Integrations
                 this.logger.LogError(ex, message);
                 throw new ApiException(message, StatusCodes.Status500InternalServerError);
             }
+        }
+
+        private void mapIntegrationToDynamic((IDomainIntegration integration, IntegrationsEnum integrationType, int version) result, dynamic integration)
+        {
+            integration.Type = getIntegrationTypeFriendlyName(result.integrationType);
+            foreach (var propertyInfo in result.integration.GetType().GetProperties().Where(_ => _.Name.ToLowerInvariant() != "deleted" || _.Name.ToLowerInvariant() != "environment"))
+            {
+                ((IDictionary<String, Object>)integration).Add(propertyInfo.Name, propertyInfo.GetValue(result.integration));
+            }
+            integration.Environment = getIntegrationEnvironmentFriendlyName(result.integration.Environment);
+            integration.Version = result.version;
         }
 
         ///<summary>
