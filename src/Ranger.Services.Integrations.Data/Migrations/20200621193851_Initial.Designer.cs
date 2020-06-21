@@ -10,15 +10,15 @@ using Ranger.Services.Integrations.Data;
 namespace Ranger.Services.Integrations.Data.Migrations
 {
     [DbContext(typeof(IntegrationsDbContext))]
-    [Migration("20200414232942_AddRowLevelSecurity")]
-    partial class AddRowLevelSecurity
+    [Migration("20200621193851_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
-                .HasAnnotation("ProductVersion", "3.1.1")
+                .HasAnnotation("ProductVersion", "3.1.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>

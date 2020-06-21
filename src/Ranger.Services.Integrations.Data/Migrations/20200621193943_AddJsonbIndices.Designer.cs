@@ -10,8 +10,8 @@ using Ranger.Services.Integrations.Data;
 namespace Ranger.Services.Integrations.Data.Migrations
 {
     [DbContext(typeof(IntegrationsDbContext))]
-    [Migration("20200602214605_AddJsonbSigningKeyIndex")]
-    partial class AddJsonbSigningKeyIndex
+    [Migration("20200621193943_AddJsonbIndices")]
+    partial class AddJsonbIndices
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

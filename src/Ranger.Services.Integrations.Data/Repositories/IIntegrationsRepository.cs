@@ -15,8 +15,7 @@ namespace Ranger.Services.Integrations.Data
         Task<IEnumerable<(IDomainIntegration integration, IntegrationsEnum integrationType, int version)>> GetAllIntegrationsForProject(Guid projectId);
         Task<IEnumerable<IDomainIntegration>> GetAllIntegrationsByIdForProject(Guid projectId, IEnumerable<Guid> integrationIds);
         Task<IEnumerable<IDomainIntegration>> GetAllIntegrationsForProjectIds(IEnumerable<Guid> projectIds);
-        Task<Guid> GetIntegrationIdByCurrentNameAsync(Guid projectId, string name);
-        Task<IDomainIntegration> GetIntegrationByIntegrationIdAsync(Guid projectId, Guid integrationId);
+        Task<IDomainIntegration> GetNotDeletedIntegrationByIntegrationIdAsync(Guid projectId, Guid integrationId);
         Task UpdateIntegrationAsync(Guid projectId, string userEmail, string eventName, int version, IEntityIntegration integration);
     }
 }
