@@ -25,7 +25,7 @@ namespace Ranger.Services.Integrations.Handlers
 
         public async Task HandleAsync(ExecuteGeofenceIntegrations message, ICorrelationContext context)
         {
-            logger.LogInformation($"Executing integrations. {JsonConvert.SerializeObject(message)}");
+            logger.LogInformation("Executing integrations. {@Message}", message);
             var repo = integrationsRepository.Invoke(message.TenantId);
 
             var distinctIntegrationIds = message.GeofenceIntegrationResults.SelectMany(_ => _.IntegrationIds).Distinct();
