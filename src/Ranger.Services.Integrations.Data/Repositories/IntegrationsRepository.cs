@@ -107,7 +107,16 @@ namespace Ranger.Services.Integrations.Data
                                 AND i.version = mv.version
                                 AND (i.data ->> 'Deleted') = 'false'
                         )
-                        SELECT *
+                        SELECT 
+                            i.id,
+                            i.tenant_id,
+                            i.stream_id,
+                            i.version,
+                            i.data,
+                            i.integration_type,
+                            i.event,
+                            i.inserted_at,
+                            i.inserted_by
                         FROM active_integrations ai, integration_streams i
                         WHERE i.stream_id = ai.stream_id
                         AND i.version = ai.version
@@ -136,7 +145,16 @@ namespace Ranger.Services.Integrations.Data
                         FROM integration_streams i, integration_unique_constraints iuc
                         WHERE iuc.project_id = '{projectId.ToString()}' AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
                     )
-                    SELECT DISTINCT ON (i.stream_id) *
+                    SELECT DISTINCT ON (i.stream_id) 
+                        i.id,
+                        i.tenant_id,
+                        i.stream_id,
+                        i.version,
+                        i.data,
+                        i.integration_type,
+                        i.event,
+                        i.inserted_at,
+                        i.inserted_by
                     FROM not_deleted i
                     WHERE (i.data ->> 'IntegrationId') IN ('{String.Join("','", integrationIds)}')
                     ORDER BY i.stream_id, i.version DESC) AS integrationstreams").ToListAsync();
@@ -155,11 +173,29 @@ namespace Ranger.Services.Integrations.Data
             FromSqlInterpolated($@"
                 SELECT * FROM (
                     WITH not_deleted AS(
-                        SELECT *
+                        SELECT  
+                            i.id,
+                            i.tenant_id,
+                            i.stream_id,
+                            i.version,
+                            i.data,
+                            i.integration_type,
+                            i.event,
+                            i.inserted_at,
+                            i.inserted_by
                         FROM integration_streams i, integration_unique_constraints iuc
                         WHERE iuc.project_id = {projectId} AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
                 )
-                SELECT DISTINCT ON (i.stream_id) *
+                SELECT DISTINCT ON (i.stream_id) 
+                    i.id,
+              		i.tenant_id,
+              		i.stream_id,
+              		i.version,
+                    i.data,
+                    i.integration_type,
+            		i.event,
+            		i.inserted_at,
+            		i.inserted_by
                 FROM not_deleted i
                 ORDER BY i.stream_id, i.version DESC) AS integrationstreams").ToListAsync();
             var integrationVersionTuples = new List<(IDomainIntegration integration, IntegrationsEnum integrationType, int version)>();
@@ -359,13 +395,31 @@ namespace Ranger.Services.Integrations.Data
             .FromSqlInterpolated($@"
                 SELECT * FROM (
                     WITH not_deleted AS(
-                        SELECT *
+                        SELECT 
+                            i.id,
+                            i.tenant_id,
+                            i.stream_id,
+                            i.version,
+                            i.data,
+                            i.integration_type,
+                            i.event,
+                            i.inserted_at,
+                            i.inserted_by
                         FROM integration_streams i, integration_unique_constraints iuc
                         WHERE iuc.project_id = '{projectId.ToString()}' 
                         AND iuc.integration_id = '{integrationId.ToString()}'
                         AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
                 )
-                SELECT DISTINCT ON (i.stream_id) *
+                SELECT DISTINCT ON (i.stream_id) 
+                    i.id,
+                    i.tenant_id,
+                    i.stream_id,
+                    i.version,
+                    i.data,
+                    i.integration_type,
+                    i.event,
+                    i.inserted_at,
+                    i.inserted_by
                 FROM not_deleted i
                 ORDER BY i.stream_id, i.version DESC) AS integrationstream").FirstOrDefaultAsync();
         }
@@ -376,13 +430,31 @@ namespace Ranger.Services.Integrations.Data
             .FromSqlInterpolated($@"
                 SELECT * FROM (
                     WITH not_deleted AS(
-                        SELECT *
+                        SELECT 
+                            i.id,
+                            i.tenant_id,
+                            i.stream_id,
+                            i.version,
+                            i.data,
+                            i.integration_type,
+                            i.event,
+                            i.inserted_at,
+                            i.inserted_by
                         FROM integration_streams i, integration_unique_constraints iuc
                         WHERE iuc.project_id = '{projectId.ToString()}' 
                         AND iuc.name = '{name}'
                         AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
                 )
-                SELECT DISTINCT ON (i.stream_id) *
+                SELECT DISTINCT ON (i.stream_id)      
+                    i.id,
+                    i.tenant_id,
+                    i.stream_id,
+                    i.version,
+                    i.data,
+                    i.integration_type,
+                    i.event,
+                    i.inserted_at,
+                    i.inserted_by
                 FROM not_deleted i
                 ORDER BY i.stream_id, i.version DESC) AS integrationstream").FirstOrDefaultAsync();
         }
