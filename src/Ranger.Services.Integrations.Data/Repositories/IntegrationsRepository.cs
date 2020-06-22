@@ -105,7 +105,7 @@ namespace Ranger.Services.Integrations.Data
                         FROM active_integrations ai, integration_streams i
                         WHERE i.stream_id = ai.stream_id
                         AND i.version = ai.version
-                        AND (i.data ->> 'ProjectId') IN ('{String.Join("','", projectIds)}') AS integrationstreams").ToListAsync();
+                        AND (i.data ->> 'ProjectId') IN ('{String.Join("','", projectIds)}')) AS integrationstreams").ToListAsync();
 
             var integrationVersionTuples = new List<IDomainIntegration>();
             foreach (var integrationStream in integrationStreams)
