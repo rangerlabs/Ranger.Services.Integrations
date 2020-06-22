@@ -14,8 +14,6 @@ using Ranger.Services.Integrations.Data.EntityModels;
 
 namespace Ranger.Services.Integrations.Data
 {
-
-    //TODO: use the new System.Text.Json API to query
     public class IntegrationsRepository : IIntegrationsRepository
     {
         private readonly ContextTenant contextTenant;
@@ -90,23 +88,24 @@ namespace Ranger.Services.Integrations.Data
         {
             var integrationStreams = await this.context.IntegrationStreams
             .FromSqlRaw($@"
-                    WITH active_integrations AS(
-                        WITH max_versions AS (
-                            SELECT stream_id, MAX(version) AS version
-                            FROM integration_streams
-                            GROUP BY stream_id
+                    SELECT * FROM (
+                        WITH active_integrations AS(
+                            WITH max_versions AS (
+                                SELECT stream_id, MAX(version) AS version
+                                FROM integration_streams
+                                GROUP BY stream_id
+                            )
+                            SELECT i.stream_id, i.version
+                            FROM max_versions mv, integration_streams i
+                            WHERE i.stream_id = mv.stream_id
+                            AND i.version = mv.version
+                            AND (i.data ->> 'Deleted') = 'false'
                         )
-                        SELECT i.stream_id, i.version
-                        FROM max_versions mv, integration_streams i
-                        WHERE i.stream_id = mv.stream_id
-                        AND i.version = mv.version
-                        AND (i.data ->> 'Deleted') = 'false'
-                    )
-                    SELECT *
-                    FROM active_integrations ai, integration_streams i
-                    WHERE i.stream_id = ai.stream_id
-                    AND i.version = ai.version
-                    AND (i.data ->> 'ProjectId') IN ('{String.Join("','", projectIds)}');").ToListAsync();
+                        SELECT *
+                        FROM active_integrations ai, integration_streams i
+                        WHERE i.stream_id = ai.stream_id
+                        AND i.version = ai.version
+                        AND (i.data ->> 'ProjectId') IN ('{String.Join("','", projectIds)}') AS integrationstreams").ToListAsync();
 
             var integrationVersionTuples = new List<IDomainIntegration>();
             foreach (var integrationStream in integrationStreams)
@@ -125,15 +124,16 @@ namespace Ranger.Services.Integrations.Data
         {
             var integrationStreams = await this.context.IntegrationStreams
             .FromSqlRaw($@"
-                WITH not_deleted AS(
-	                SELECT *
-            	    FROM integration_streams i, integration_unique_constraints iuc
-            	    WHERE iuc.project_id = '{projectId.ToString()}' AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
-               )
-               SELECT DISTINCT ON (i.stream_id) *
-               FROM not_deleted i
-               WHERE (i.data ->> 'IntegrationId') IN ('{String.Join("','", integrationIds)}')
-               ORDER BY i.stream_id, i.version DESC;").ToListAsync();
+                SELECT * FROM (
+                    WITH not_deleted AS(
+                        SELECT *
+                        FROM integration_streams i, integration_unique_constraints iuc
+                        WHERE iuc.project_id = '{projectId.ToString()}' AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
+                    )
+                    SELECT DISTINCT ON (i.stream_id) *
+                    FROM not_deleted i
+                    WHERE (i.data ->> 'IntegrationId') IN ('{String.Join("','", integrationIds)}')
+                    ORDER BY i.stream_id, i.version DESC) AS integrationstreams").ToListAsync();
             var integrationVersionTuples = new List<IDomainIntegration>();
             foreach (var integrationStream in integrationStreams)
             {
@@ -147,14 +147,15 @@ namespace Ranger.Services.Integrations.Data
         {
             var integrationStreams = await this.context.IntegrationStreams.
             FromSqlInterpolated($@"
-                WITH not_deleted AS(
-	                SELECT *
-            	    FROM integration_streams i, integration_unique_constraints iuc
-            	    WHERE iuc.project_id = {projectId} AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
-               )
-               SELECT DISTINCT ON (i.stream_id) *
-               FROM not_deleted i
-               ORDER BY i.stream_id, i.version DESC;").ToListAsync();
+                SELECT * FROM (
+                    WITH not_deleted AS(
+                        SELECT *
+                        FROM integration_streams i, integration_unique_constraints iuc
+                        WHERE iuc.project_id = {projectId} AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
+                )
+                SELECT DISTINCT ON (i.stream_id) *
+                FROM not_deleted i
+                ORDER BY i.stream_id, i.version DESC) AS integrationstreams").ToListAsync();
             var integrationVersionTuples = new List<(IDomainIntegration integration, IntegrationsEnum integrationType, int version)>();
             foreach (var integrationStream in integrationStreams)
             {
@@ -350,32 +351,34 @@ namespace Ranger.Services.Integrations.Data
         {
             return await this.context.IntegrationStreams
             .FromSqlInterpolated($@"
-                WITH not_deleted AS(
-	                SELECT *
-            	    FROM integration_streams i, integration_unique_constraints iuc
-            	    WHERE iuc.project_id = '{projectId.ToString()}' 
-                    AND iuc.integration_id = '{integrationId.ToString()}'
-                    AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
-               )
-               SELECT DISTINCT ON (i.stream_id) *
-               FROM not_deleted i
-               ORDER BY i.stream_id, i.version DESC;").FirstOrDefaultAsync();
+                SELECT * FROM (
+                    WITH not_deleted AS(
+                        SELECT *
+                        FROM integration_streams i, integration_unique_constraints iuc
+                        WHERE iuc.project_id = '{projectId.ToString()}' 
+                        AND iuc.integration_id = '{integrationId.ToString()}'
+                        AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
+                )
+                SELECT DISTINCT ON (i.stream_id) *
+                FROM not_deleted i
+                ORDER BY i.stream_id, i.version DESC) AS integrationstream").FirstOrDefaultAsync();
         }
 
         private async Task<IntegrationStream> GetNotDeletedIntegrationStreamByIntegrationNameAsync(Guid projectId, string name)
         {
             return await this.context.IntegrationStreams
             .FromSqlInterpolated($@"
-                WITH not_deleted AS(
-	                SELECT *
-            	    FROM integration_streams i, integration_unique_constraints iuc
-            	    WHERE iuc.project_id = '{projectId.ToString()}' 
-                    AND iuc.name = '{name}'
-                    AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
-               )
-               SELECT DISTINCT ON (i.stream_id) *
-               FROM not_deleted i
-               ORDER BY i.stream_id, i.version DESC;").FirstOrDefaultAsync();
+                SELECT * FROM (
+                    WITH not_deleted AS(
+                        SELECT *
+                        FROM integration_streams i, integration_unique_constraints iuc
+                        WHERE iuc.project_id = '{projectId.ToString()}' 
+                        AND iuc.name = '{name}'
+                        AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
+                )
+                SELECT DISTINCT ON (i.stream_id) *
+                FROM not_deleted i
+                ORDER BY i.stream_id, i.version DESC) AS integrationstream").FirstOrDefaultAsync();
         }
 
         public async Task<IntegrationUniqueConstraint> GetIntegrationUniqueConstraintsByIntegrationIdAsync(Guid projectId, Guid integrationId)
