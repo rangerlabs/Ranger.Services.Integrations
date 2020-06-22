@@ -86,27 +86,32 @@ namespace Ranger.Services.Integrations.Data
 
         public async Task<IEnumerable<IDomainIntegration>> GetAllIntegrationsForProjectIds(IEnumerable<Guid> projectIds)
         {
+            if (projectIds is null)
+            {
+                throw new ArgumentNullException(nameof(projectIds));
+            }
+
+            logger.LogDebug("Querying all integrations for project ids {@ProjectIds}", projectIds);
             var integrationStreams = await this.context.IntegrationStreams
             .FromSqlRaw($@"
                     SELECT * FROM (
                         WITH active_integrations AS(
                             WITH max_versions AS (
-                                SELECT stream_id, MAX(version) AS version
-                                FROM integration_streams
-                                GROUP BY stream_id
-                            )
-                            SELECT i.stream_id, i.version
-                            FROM max_versions mv, integration_streams i
-                            WHERE i.stream_id = mv.stream_id
-                            AND i.version = mv.version
-                            AND (i.data ->> 'Deleted') = 'false'
+                                    SELECT stream_id, MAX(version) AS version
+                                    FROM integration_streams
+                                    GROUP BY stream_id
+                                )
+                                SELECT i.stream_id, i.version
+                                FROM max_versions mv, integration_streams i
+                                WHERE i.stream_id = mv.stream_id
+                                AND i.version = mv.version
+                                AND (i.data ->> 'Deleted') = 'false'
                         )
                         SELECT *
                         FROM active_integrations ai, integration_streams i
                         WHERE i.stream_id = ai.stream_id
                         AND i.version = ai.version
                         AND (i.data ->> 'ProjectId') IN ('{String.Join("','", projectIds)}')) AS integrationstreams").ToListAsync();
-
             var integrationVersionTuples = new List<IDomainIntegration>();
             foreach (var integrationStream in integrationStreams)
             {
@@ -117,6 +122,7 @@ namespace Ranger.Services.Integrations.Data
                     )
                 );
             }
+            logger.LogDebug("Query returned {IntegrationCount} integrations", integrationStreams.Count);
             return integrationVersionTuples;
         }
 
