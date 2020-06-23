@@ -152,7 +152,7 @@ namespace Ranger.Services.Integrations.Data
                             i.inserted_at,
                             i.inserted_by
                         FROM integration_streams i, integration_unique_constraints iuc
-                        WHERE iuc.project_id = {projectId} 
+                        WHERE iuc.project_id = '{projectId.ToString()}' 
                         AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
                     )
                     SELECT DISTINCT ON (i.stream_id) 
