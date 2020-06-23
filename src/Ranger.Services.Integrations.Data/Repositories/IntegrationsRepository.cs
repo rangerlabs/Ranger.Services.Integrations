@@ -141,9 +141,19 @@ namespace Ranger.Services.Integrations.Data
             .FromSqlRaw($@"
                 SELECT * FROM (
                     WITH not_deleted AS(
-                        SELECT *
+                        SELECT 
+                            i.id,
+                            i.tenant_id,
+                            i.stream_id,
+                            i.version,
+                            i.data,
+                            i.integration_type,
+                            i.event,
+                            i.inserted_at,
+                            i.inserted_by
                         FROM integration_streams i, integration_unique_constraints iuc
-                        WHERE iuc.project_id = {projectId} AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
+                        WHERE iuc.project_id = {projectId} 
+                        AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
                     )
                     SELECT DISTINCT ON (i.stream_id) 
                         i.id,
@@ -184,7 +194,8 @@ namespace Ranger.Services.Integrations.Data
                             i.inserted_at,
                             i.inserted_by
                         FROM integration_streams i, integration_unique_constraints iuc
-                        WHERE iuc.project_id = {projectId} AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
+                        WHERE iuc.project_id = {projectId} 
+                        AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
                 )
                 SELECT DISTINCT ON (i.stream_id) 
                     i.id,
