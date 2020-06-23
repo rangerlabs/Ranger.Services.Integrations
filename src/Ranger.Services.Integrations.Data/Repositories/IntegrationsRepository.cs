@@ -84,7 +84,7 @@ namespace Ranger.Services.Integrations.Data
             }
         }
 
-        public async Task<IEnumerable<IDomainIntegration>> GetAllIntegrationsForProjectIds(IEnumerable<Guid> projectIds)
+        public async Task<IEnumerable<IDomainIntegration>> GetAllNotDeletedIntegrationsForProjectIds(IEnumerable<Guid> projectIds)
         {
             if (projectIds is null)
             {
@@ -135,7 +135,7 @@ namespace Ranger.Services.Integrations.Data
             return integrationVersionTuples;
         }
 
-        public async Task<IEnumerable<IDomainIntegration>> GetAllIntegrationsByIdForProject(Guid projectId, IEnumerable<Guid> integrationIds)
+        public async Task<IEnumerable<IDomainIntegration>> GetAllNotDeletedIntegrationsByIdsForProject(Guid projectId, IEnumerable<Guid> integrationIds)
         {
             var integrationStreams = await this.context.IntegrationStreams
             .FromSqlRaw($@"
@@ -213,17 +213,6 @@ namespace Ranger.Services.Integrations.Data
 
             var integration = JsonToEntityFactory.Factory(integrationStream.IntegrationType, integrationStream.Data);
             return EntityToDomainFactory.Factory(integration);
-        }
-
-        public async Task RemoveIntegrationStreamAsync(Guid projectId, string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                throw new ArgumentException($"{nameof(name)} was null or whitespace");
-            }
-            this.context.IntegrationStreams.RemoveRange(
-                await this.context.IntegrationStreams.FromSqlInterpolated($"SELECT * FROM integration_streams WHERE data ->> 'ProjectId' = {projectId.ToString()} AND data ->> 'Name' = {name} ORDER BY version DESC").ToListAsync()
-            );
         }
 
         public async Task<Guid> SoftDeleteAsync(Guid projectId, string userEmail, string name)

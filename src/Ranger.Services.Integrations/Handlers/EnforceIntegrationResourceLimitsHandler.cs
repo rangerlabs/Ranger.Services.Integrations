@@ -29,7 +29,7 @@ namespace Ranger.Services.Integrations.Handlers
             foreach (var tenantLimit in message.TenantLimits)
             {
                 var repo = integrationsRepoFactory(tenantLimit.tenantId);
-                var integrations = await repo.GetAllIntegrationsForProjectIds(tenantLimit.remainingProjectIds);
+                var integrations = await repo.GetAllNotDeletedIntegrationsForProjectIds(tenantLimit.remainingProjectIds);
                 if (integrations.Count() > tenantLimit.limit)
                 {
                     var exceededByCount = integrations.Count() - tenantLimit.limit;

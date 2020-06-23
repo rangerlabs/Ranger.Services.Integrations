@@ -31,7 +31,7 @@ namespace Ranger.Services.Integrations.Handlers
             var distinctIntegrationIds = message.GeofenceIntegrationResults.SelectMany(_ => _.IntegrationIds).Distinct();
             logger.LogDebug("Determined distinct integrations to be {DistinctIntegrationIds}", distinctIntegrationIds);
 
-            var distinctIntegrations = await repo.GetAllIntegrationsByIdForProject(message.ProjectId, distinctIntegrationIds);
+            var distinctIntegrations = await repo.GetAllNotDeletedIntegrationsByIdsForProject(message.ProjectId, distinctIntegrationIds);
 
             foreach (var integration in distinctIntegrations)
             {
