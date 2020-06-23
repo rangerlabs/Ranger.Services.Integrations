@@ -143,7 +143,7 @@ namespace Ranger.Services.Integrations.Data
                     WITH not_deleted AS(
                         SELECT *
                         FROM integration_streams i, integration_unique_constraints iuc
-                        WHERE iuc.project_id = '{projectId.ToString()}' AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
+                        WHERE iuc.project_id = {projectId} AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
                     )
                     SELECT DISTINCT ON (i.stream_id) 
                         i.id,
@@ -395,8 +395,8 @@ namespace Ranger.Services.Integrations.Data
                             i.inserted_at,
                             i.inserted_by
                         FROM integration_streams i, integration_unique_constraints iuc
-                        WHERE iuc.project_id = '{projectId.ToString()}' 
-                        AND iuc.integration_id = '{integrationId.ToString()}'
+                        WHERE iuc.project_id = {projectId} 
+                        AND iuc.integration_id = {integrationId}
                         AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
                 )
                 SELECT DISTINCT ON (i.stream_id) 
@@ -430,7 +430,7 @@ namespace Ranger.Services.Integrations.Data
                             i.inserted_at,
                             i.inserted_by
                         FROM integration_streams i, integration_unique_constraints iuc
-                        WHERE iuc.project_id = '{projectId.ToString()}' 
+                        WHERE iuc.project_id = {projectId}
                         AND iuc.name = '{name}'
                         AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
                 )
