@@ -253,7 +253,6 @@ namespace Ranger.Services.Integrations.Data
                     await this.context.SaveChangesAsync();
                     deleted = true;
                     logger.LogInformation($"Integration  {currentIntegration.Name} deleted");
-                    return currentIntegration.IntegrationId;
                 }
                 catch (DbUpdateException ex)
                 {
@@ -278,112 +277,112 @@ namespace Ranger.Services.Integrations.Data
             {
                 throw new ConcurrencyException($"After '{maxConcurrencyAttempts}' attempts, the version was still outdated. Too many updates have been applied in a short period of time. The current stream version is '{currentIntegrationStream.Version + 1}'. The integration was not deleted");
             }
-        }
-    }
-
-    public async Task UpdateIntegrationAsync(Guid projectId, string userEmail, string eventName, int version, IEntityIntegration integration)
-    {
-        if (string.IsNullOrWhiteSpace(userEmail))
-        {
-            throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
-        }
-        if (string.IsNullOrWhiteSpace(eventName))
-        {
-            throw new ArgumentException($"{nameof(eventName)} was null or whitespace");
-        }
-        if (integration is null)
-        {
-            throw new ArgumentException($"{nameof(integration)} was null");
+            return currentIntegration.IntegrationId;
         }
 
-        var currentIntegrationStream = await this.GetNotDeletedIntegrationStreamByIntegrationIdAsync(projectId, integration.IntegrationId);
-        if (currentIntegrationStream is null)
+        public async Task UpdateIntegrationAsync(Guid projectId, string userEmail, string eventName, int version, IEntityIntegration integration)
         {
-            throw new RangerException($"No integration was found for ProjectId '{integration.ProjectId}' and Integration Id '{integration.IntegrationId}'");
-        }
-        ValidateRequestVersionIncremented(version, currentIntegrationStream);
-
-        var outdatedIntegration = JsonToEntityFactory.Factory(currentIntegrationStream.IntegrationType, currentIntegrationStream.Data);
-        integration.ProjectId = outdatedIntegration.ProjectId;
-        integration.Deleted = false;
-        integration.CreatedOn = outdatedIntegration.CreatedOn;
-
-        var serializedNewIntegrationData = JsonConvert.SerializeObject(integration);
-        ValidateDataJsonInequality(currentIntegrationStream, serializedNewIntegrationData);
-
-        var uniqueConstraint = await this.GetIntegrationUniqueConstraintsByIntegrationIdAsync(projectId, integration.IntegrationId);
-        uniqueConstraint.Name = integration.Name.ToLowerInvariant();
-
-        var updatedIntegrationStream = new IntegrationStream()
-        {
-            TenantId = this.contextTenant.TenantId,
-            StreamId = currentIntegrationStream.StreamId,
-            Version = version,
-            Data = serializedNewIntegrationData,
-            IntegrationType = currentIntegrationStream.IntegrationType,
-            Event = eventName,
-            InsertedAt = DateTime.UtcNow,
-            InsertedBy = userEmail,
-        };
-
-        this.context.Update(uniqueConstraint);
-        this.context.IntegrationStreams.Add(updatedIntegrationStream);
-        try
-        {
-            await this.context.SaveChangesAsync();
-        }
-        catch (DbUpdateException ex)
-        {
-            var postgresException = ex.InnerException as PostgresException;
-            if (postgresException.SqlState == "23505")
+            if (string.IsNullOrWhiteSpace(userEmail))
             {
-                var uniqueIndexViolation = postgresException.ConstraintName;
-                switch (uniqueIndexViolation)
-                {
-                    case IntegrationJsonbConstraintNames.Name:
-                        {
-                            throw new EventStreamDataConstraintException("The integration name is in use by another integration");
-                        }
-                    case IntegrationJsonbConstraintNames.IntegrationId_Version:
-                        {
-                            throw new ConcurrencyException($"The version number '{version}' was outdated. The current resource is at version '{currentIntegrationStream.Version}'. Re-request the resource to view the latest changes");
-                        }
-                    default:
-                        {
-                            throw new EventStreamDataConstraintException("");
-                        }
-                }
+                throw new ArgumentException($"{nameof(userEmail)} was null or whitespace");
             }
-            throw;
-        }
-    }
+            if (string.IsNullOrWhiteSpace(eventName))
+            {
+                throw new ArgumentException($"{nameof(eventName)} was null or whitespace");
+            }
+            if (integration is null)
+            {
+                throw new ArgumentException($"{nameof(integration)} was null");
+            }
 
-    private static void ValidateDataJsonInequality(IntegrationStream currentIntegrationStream, string serializedNewIntegrationData)
-    {
-        var currentJObject = JsonConvert.DeserializeObject<JObject>(currentIntegrationStream.Data);
-        var requestJObject = JsonConvert.DeserializeObject<JObject>(serializedNewIntegrationData);
-        if (JToken.DeepEquals(currentJObject, requestJObject))
-        {
-            throw new NoOpException("No changes were made from the previous version");
-        }
-    }
+            var currentIntegrationStream = await this.GetNotDeletedIntegrationStreamByIntegrationIdAsync(projectId, integration.IntegrationId);
+            if (currentIntegrationStream is null)
+            {
+                throw new RangerException($"No integration was found for ProjectId '{integration.ProjectId}' and Integration Id '{integration.IntegrationId}'");
+            }
+            ValidateRequestVersionIncremented(version, currentIntegrationStream);
 
-    private static void ValidateRequestVersionIncremented(int version, IntegrationStream currentIntegrationStream)
-    {
-        if (version - currentIntegrationStream.Version > 1)
-        {
-            throw new ConcurrencyException($"The version number '{version}' was too high. The current resource is at version '{currentIntegrationStream.Version}'");
-        }
-        if (version - currentIntegrationStream.Version <= 0)
-        {
-            throw new ConcurrencyException($"The version number '{version}' was outdated. The current resource is at version '{currentIntegrationStream.Version}'. Re-request the resource to view the latest changes");
-        }
-    }
+            var outdatedIntegration = JsonToEntityFactory.Factory(currentIntegrationStream.IntegrationType, currentIntegrationStream.Data);
+            integration.ProjectId = outdatedIntegration.ProjectId;
+            integration.Deleted = false;
+            integration.CreatedOn = outdatedIntegration.CreatedOn;
 
-    private async Task<IntegrationStream> GetNotDeletedIntegrationStreamByIntegrationIdAsync(Guid projectId, Guid integrationId)
-    {
-        return await this.context.IntegrationStreams
-        .FromSqlInterpolated($@"
+            var serializedNewIntegrationData = JsonConvert.SerializeObject(integration);
+            ValidateDataJsonInequality(currentIntegrationStream, serializedNewIntegrationData);
+
+            var uniqueConstraint = await this.GetIntegrationUniqueConstraintsByIntegrationIdAsync(projectId, integration.IntegrationId);
+            uniqueConstraint.Name = integration.Name.ToLowerInvariant();
+
+            var updatedIntegrationStream = new IntegrationStream()
+            {
+                TenantId = this.contextTenant.TenantId,
+                StreamId = currentIntegrationStream.StreamId,
+                Version = version,
+                Data = serializedNewIntegrationData,
+                IntegrationType = currentIntegrationStream.IntegrationType,
+                Event = eventName,
+                InsertedAt = DateTime.UtcNow,
+                InsertedBy = userEmail,
+            };
+
+            this.context.Update(uniqueConstraint);
+            this.context.IntegrationStreams.Add(updatedIntegrationStream);
+            try
+            {
+                await this.context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                var postgresException = ex.InnerException as PostgresException;
+                if (postgresException.SqlState == "23505")
+                {
+                    var uniqueIndexViolation = postgresException.ConstraintName;
+                    switch (uniqueIndexViolation)
+                    {
+                        case IntegrationJsonbConstraintNames.Name:
+                            {
+                                throw new EventStreamDataConstraintException("The integration name is in use by another integration");
+                            }
+                        case IntegrationJsonbConstraintNames.IntegrationId_Version:
+                            {
+                                throw new ConcurrencyException($"The version number '{version}' was outdated. The current resource is at version '{currentIntegrationStream.Version}'. Re-request the resource to view the latest changes");
+                            }
+                        default:
+                            {
+                                throw new EventStreamDataConstraintException("");
+                            }
+                    }
+                }
+                throw;
+            }
+        }
+
+        private static void ValidateDataJsonInequality(IntegrationStream currentIntegrationStream, string serializedNewIntegrationData)
+        {
+            var currentJObject = JsonConvert.DeserializeObject<JObject>(currentIntegrationStream.Data);
+            var requestJObject = JsonConvert.DeserializeObject<JObject>(serializedNewIntegrationData);
+            if (JToken.DeepEquals(currentJObject, requestJObject))
+            {
+                throw new NoOpException("No changes were made from the previous version");
+            }
+        }
+
+        private static void ValidateRequestVersionIncremented(int version, IntegrationStream currentIntegrationStream)
+        {
+            if (version - currentIntegrationStream.Version > 1)
+            {
+                throw new ConcurrencyException($"The version number '{version}' was too high. The current resource is at version '{currentIntegrationStream.Version}'");
+            }
+            if (version - currentIntegrationStream.Version <= 0)
+            {
+                throw new ConcurrencyException($"The version number '{version}' was outdated. The current resource is at version '{currentIntegrationStream.Version}'. Re-request the resource to view the latest changes");
+            }
+        }
+
+        private async Task<IntegrationStream> GetNotDeletedIntegrationStreamByIntegrationIdAsync(Guid projectId, Guid integrationId)
+        {
+            return await this.context.IntegrationStreams
+            .FromSqlInterpolated($@"
                 SELECT * FROM (
                     WITH not_deleted AS(
                         SELECT 
@@ -413,12 +412,12 @@ namespace Ranger.Services.Integrations.Data
                     i.inserted_by
                 FROM not_deleted i
                 ORDER BY i.stream_id, i.version DESC) AS integrationstream").FirstOrDefaultAsync();
-    }
+        }
 
-    private async Task<IntegrationStream> GetNotDeletedIntegrationStreamByIntegrationNameAsync(Guid projectId, string name)
-    {
-        return await this.context.IntegrationStreams
-        .FromSqlInterpolated($@"
+        private async Task<IntegrationStream> GetNotDeletedIntegrationStreamByIntegrationNameAsync(Guid projectId, string name)
+        {
+            return await this.context.IntegrationStreams
+            .FromSqlInterpolated($@"
                 SELECT * FROM (
                     WITH not_deleted AS(
                         SELECT 
@@ -433,10 +432,10 @@ namespace Ranger.Services.Integrations.Data
                             i.inserted_by
                         FROM integration_streams i, integration_unique_constraints iuc
                         WHERE iuc.project_id = {projectId}
-                        AND iuc.name = {name.ToLowerInvariant()}
+                        AND iuc.name = '{name.ToLowerInvariant()}'
                         AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
                 )
-                SELECT DISTINCT ON (i.stream_id)
+                SELECT DISTINCT ON (i.stream_id)      
                     i.id,
                     i.tenant_id,
                     i.stream_id,
@@ -448,22 +447,23 @@ namespace Ranger.Services.Integrations.Data
                     i.inserted_by
                 FROM not_deleted i
                 ORDER BY i.stream_id, i.version DESC) AS integrationstream").FirstOrDefaultAsync();
-    }
+        }
 
-    public async Task<IntegrationUniqueConstraint> GetIntegrationUniqueConstraintsByIntegrationIdAsync(Guid projectId, Guid integrationId)
-    {
-        return await this.context.IntegrationUniqueConstraints.SingleOrDefaultAsync(_ => _.ProjectId == projectId && _.IntegrationId == integrationId);
-    }
-
-    private void AddIntegrationUniqueConstraints(IntegrationStream IntegrationStream, IIntegration integration)
-    {
-        var newIntegrationUniqueConstraint = new IntegrationUniqueConstraint
+        public async Task<IntegrationUniqueConstraint> GetIntegrationUniqueConstraintsByIntegrationIdAsync(Guid projectId, Guid integrationId)
         {
-            IntegrationId = integration.IntegrationId,
-            TenantId = contextTenant.TenantId,
-            ProjectId = integration.ProjectId,
-            Name = integration.Name.ToLowerInvariant(),
-        };
-        this.context.IntegrationUniqueConstraints.Add(newIntegrationUniqueConstraint);
+            return await this.context.IntegrationUniqueConstraints.SingleOrDefaultAsync(_ => _.ProjectId == projectId && _.IntegrationId == integrationId);
+        }
+
+        private void AddIntegrationUniqueConstraints(IntegrationStream IntegrationStream, IIntegration integration)
+        {
+            var newIntegrationUniqueConstraint = new IntegrationUniqueConstraint
+            {
+                IntegrationId = integration.IntegrationId,
+                TenantId = contextTenant.TenantId,
+                ProjectId = integration.ProjectId,
+                Name = integration.Name.ToLowerInvariant(),
+            };
+            this.context.IntegrationUniqueConstraints.Add(newIntegrationUniqueConstraint);
+        }
     }
 }
