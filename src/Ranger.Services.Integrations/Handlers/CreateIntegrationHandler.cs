@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -21,14 +22,21 @@ namespace Ranger.Services.Integrations.Handlers
         private readonly SubscriptionsHttpClient subscriptionsHttpClient;
         private readonly ProjectsHttpClient projectsHttpClient;
         private readonly ILogger<CreateIntegrationHandler> logger;
+        private readonly IDataProtector dataProtector;
 
-        public CreateIntegrationHandler(IBusPublisher busPublisher, Func<string, IntegrationsRepository> integrationsRepository, SubscriptionsHttpClient subscriptionsHttpClient, ProjectsHttpClient projectsHttpClient, ILogger<CreateIntegrationHandler> logger)
+        public CreateIntegrationHandler(IBusPublisher busPublisher,
+                                        Func<string, IntegrationsRepository> integrationsRepository,
+                                        SubscriptionsHttpClient subscriptionsHttpClient,
+                                        ProjectsHttpClient projectsHttpClient,
+                                        ILogger<CreateIntegrationHandler> logger,
+                                        IDataProtectionProvider dataProtectionProvider)
         {
             this.busPublisher = busPublisher;
             this.integrationsRepository = integrationsRepository;
             this.subscriptionsHttpClient = subscriptionsHttpClient;
             this.projectsHttpClient = projectsHttpClient;
             this.logger = logger;
+            this.dataProtector = dataProtectionProvider.CreateProtector(nameof(CreateIntegrationHandler));
         }
 
         public async Task HandleAsync(CreateIntegration command, ICorrelationContext context)
@@ -52,7 +60,7 @@ namespace Ranger.Services.Integrations.Handlers
             try
             {
                 var domainIntegration = JsonToDomainFactory.Factory(command.IntegrationType, command.MessageJsonContent);
-                entityIntegration = DomainToEntityFactory.Factory(domainIntegration);
+                entityIntegration = DomainToEntityFactory.Factory(domainIntegration, dataProtector);
                 entityIntegration.IntegrationId = Guid.NewGuid();
                 entityIntegration.ProjectId = command.ProjectId;
             }

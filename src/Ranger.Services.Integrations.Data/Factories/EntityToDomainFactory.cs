@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.DataProtection;
 using Newtonsoft.Json;
 using Ranger.Services.Integrations.Data.DomainModels;
 using Ranger.Services.Integrations.Data.EntityModels;
@@ -8,7 +9,7 @@ namespace Ranger.Services.Integrations.Data
 {
     public static class EntityToDomainFactory
     {
-        internal static IDomainIntegration Factory(IEntityIntegration entityIntegration)
+        internal static IDomainIntegration Factory(IEntityIntegration entityIntegration, IDataProtector dataProtector)
         {
             switch (entityIntegration)
             {
@@ -26,8 +27,8 @@ namespace Ranger.Services.Integrations.Data
                             Url = e.Url,
                             SigningKey = e.SigningKey
                         };
-                        domainIntegration.Headers = JsonConvert.DeserializeObject<IEnumerable<KeyValuePair<string, string>>>(e.Headers);
-                        domainIntegration.Metadata = JsonConvert.DeserializeObject<IEnumerable<KeyValuePair<string, string>>>(e.Metadata);
+                        domainIntegration.Headers = JsonConvert.DeserializeObject<IEnumerable<KeyValuePair<string, string>>>(dataProtector.Unprotect(e.Headers));
+                        domainIntegration.Metadata = JsonConvert.DeserializeObject<IEnumerable<KeyValuePair<string, string>>>(dataProtector.Unprotect(e.Metadata));
                         return domainIntegration;
                     }
                 default:

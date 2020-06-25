@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -19,12 +20,14 @@ namespace Ranger.Services.Integrations.Data
         private readonly ContextTenant contextTenant;
         private readonly IntegrationsDbContext context;
         private readonly ILogger<IntegrationsRepository> logger;
+        private readonly IDataProtector dataProtector;
 
-        public IntegrationsRepository(ContextTenant contextTenant, IntegrationsDbContext context, ILogger<IntegrationsRepository> logger)
+        public IntegrationsRepository(ContextTenant contextTenant, IntegrationsDbContext context, ILogger<IntegrationsRepository> logger, IDataProtectionProvider dataProtectionProvider)
         {
             this.contextTenant = contextTenant;
             this.context = context;
             this.logger = logger;
+            this.dataProtector = dataProtectionProvider.CreateProtector(nameof(IntegrationsRepository));
         }
 
         public async Task AddIntegrationAsync(string userEmail, string eventName, IEntityIntegration integration, IntegrationsEnum integrationType)
@@ -127,7 +130,7 @@ namespace Ranger.Services.Integrations.Data
                 var integration = JsonToEntityFactory.Factory(integrationStream.IntegrationType, integrationStream.Data);
                 integrationVersionTuples.Add(
                     (
-                        EntityToDomainFactory.Factory(integration)
+                        EntityToDomainFactory.Factory(integration, this.dataProtector)
                     )
                 );
             }
@@ -172,7 +175,7 @@ namespace Ranger.Services.Integrations.Data
             foreach (var integrationStream in integrationStreams)
             {
                 var integration = JsonToEntityFactory.Factory(integrationStream.IntegrationType, integrationStream.Data);
-                integrationVersionTuples.Add((EntityToDomainFactory.Factory(integration)));
+                integrationVersionTuples.Add((EntityToDomainFactory.Factory(integration, this.dataProtector)));
             }
             return integrationVersionTuples;
         }
@@ -213,7 +216,7 @@ namespace Ranger.Services.Integrations.Data
             foreach (var integrationStream in integrationStreams)
             {
                 var integration = JsonToEntityFactory.Factory(integrationStream.IntegrationType, integrationStream.Data);
-                integrationVersionTuples.Add((EntityToDomainFactory.Factory(integration), integrationStream.IntegrationType, integrationStream.Version));
+                integrationVersionTuples.Add((EntityToDomainFactory.Factory(integration, this.dataProtector), integrationStream.IntegrationType, integrationStream.Version));
             }
             return integrationVersionTuples;
         }
@@ -223,7 +226,7 @@ namespace Ranger.Services.Integrations.Data
             IntegrationStream integrationStream = await GetNotDeletedIntegrationStreamByIntegrationIdAsync(projectId, integrationId);
 
             var integration = JsonToEntityFactory.Factory(integrationStream.IntegrationType, integrationStream.Data);
-            return EntityToDomainFactory.Factory(integration);
+            return EntityToDomainFactory.Factory(integration, this.dataProtector);
         }
 
         public async Task<Guid> SoftDeleteAsync(Guid projectId, string userEmail, string name)

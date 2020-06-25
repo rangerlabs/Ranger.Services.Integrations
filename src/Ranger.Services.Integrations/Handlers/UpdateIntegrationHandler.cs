@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -17,12 +18,14 @@ namespace Ranger.Services.Integrations.Handlers
         private readonly IBusPublisher busPublisher;
         private readonly Func<string, IntegrationsRepository> integrationsRepository;
         private readonly ILogger<UpdateIntegrationHandler> logger;
+        private readonly IDataProtector dataProtector;
 
-        public UpdateIntegrationHandler(IBusPublisher busPublisher, Func<string, IntegrationsRepository> integrationsRepository, ILogger<UpdateIntegrationHandler> logger)
+        public UpdateIntegrationHandler(IBusPublisher busPublisher, Func<string, IntegrationsRepository> integrationsRepository, ILogger<UpdateIntegrationHandler> logger, IDataProtectionProvider dataProtectionProvider)
         {
             this.busPublisher = busPublisher;
             this.integrationsRepository = integrationsRepository;
             this.logger = logger;
+            this.dataProtector = dataProtectionProvider.CreateProtector(nameof(UpdateIntegrationHandler));
         }
 
         public async Task HandleAsync(UpdateIntegration command, ICorrelationContext context)
@@ -33,7 +36,7 @@ namespace Ranger.Services.Integrations.Handlers
             try
             {
                 var domainIntegration = JsonToDomainFactory.Factory(command.IntegrationType, command.MessageJsonContent);
-                entityIntegration = DomainToEntityFactory.Factory(domainIntegration);
+                entityIntegration = DomainToEntityFactory.Factory(domainIntegration, dataProtector);
             }
             catch (JsonSerializationException ex)
             {

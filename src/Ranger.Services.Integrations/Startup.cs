@@ -116,7 +116,7 @@ namespace Ranger.Services.Integrations
             {
                 var provider = c.Resolve<TenantServiceDbContext>();
                 var (dbContextOptions, model) = provider.GetDbContextOptions<IntegrationsDbContext>(p.TypedAs<string>());
-                return new IntegrationsRepository(model, new IntegrationsDbContext(dbContextOptions), c.Resolve<ILogger<IntegrationsRepository>>());
+                return new IntegrationsRepository(model, new IntegrationsDbContext(dbContextOptions), c.Resolve<ILogger<IntegrationsRepository>>(), c.Resolve<IDataProtectionProvider>());
             });
             builder.AddRabbitMq();
         }
