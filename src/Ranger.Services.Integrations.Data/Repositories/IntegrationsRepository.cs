@@ -27,7 +27,7 @@ namespace Ranger.Services.Integrations.Data
             this.contextTenant = contextTenant;
             this.context = context;
             this.logger = logger;
-            this.dataProtector = dataProtectionProvider.CreateProtector(nameof(IntegrationsRepository));
+            this.dataProtector = dataProtectionProvider.CreateProtector(IntegrationDataProtectorPurpose.Purpose);
         }
 
         public async Task AddIntegrationAsync(string userEmail, string eventName, IEntityIntegration integration, IntegrationsEnum integrationType)

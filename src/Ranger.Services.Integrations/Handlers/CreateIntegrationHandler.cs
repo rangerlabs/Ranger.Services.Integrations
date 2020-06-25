@@ -36,7 +36,7 @@ namespace Ranger.Services.Integrations.Handlers
             this.subscriptionsHttpClient = subscriptionsHttpClient;
             this.projectsHttpClient = projectsHttpClient;
             this.logger = logger;
-            this.dataProtector = dataProtectionProvider.CreateProtector(nameof(CreateIntegrationHandler));
+            this.dataProtector = dataProtectionProvider.CreateProtector(IntegrationDataProtectorPurpose.Purpose);
         }
 
         public async Task HandleAsync(CreateIntegration command, ICorrelationContext context)

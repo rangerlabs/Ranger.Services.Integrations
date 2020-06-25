@@ -25,7 +25,7 @@ namespace Ranger.Services.Integrations.Handlers
             this.busPublisher = busPublisher;
             this.integrationsRepository = integrationsRepository;
             this.logger = logger;
-            this.dataProtector = dataProtectionProvider.CreateProtector(nameof(UpdateIntegrationHandler));
+            this.dataProtector = dataProtectionProvider.CreateProtector(IntegrationDataProtectorPurpose.Purpose);
         }
 
         public async Task HandleAsync(UpdateIntegration command, ICorrelationContext context)
