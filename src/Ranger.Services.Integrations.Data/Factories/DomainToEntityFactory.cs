@@ -26,8 +26,10 @@ namespace Ranger.Services.Integrations.Data
                             Url = d.Url,
                             SigningKey = d.SigningKey
                         };
-                        entityIntegration.Headers = dataProtector.Protect(JsonConvert.SerializeObject(d.Headers) ?? "[]");
-                        entityIntegration.Metadata = dataProtector.Protect(JsonConvert.SerializeObject(d.Metadata) ?? "[]");
+                        var protectedHeaders = dataProtector.Protect(JsonConvert.SerializeObject(d.Headers) ?? "[]");
+                        var protectedMetadata = dataProtector.Protect(JsonConvert.SerializeObject(d.Metadata) ?? "[]");
+                        entityIntegration.Headers = protectedHeaders.Base64Encode();
+                        entityIntegration.Metadata = protectedHeaders.Base64Encode();
                         return entityIntegration;
                     }
                 default:
