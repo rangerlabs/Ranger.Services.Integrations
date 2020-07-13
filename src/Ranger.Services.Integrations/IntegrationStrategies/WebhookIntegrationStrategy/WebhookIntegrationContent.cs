@@ -8,7 +8,7 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
     {
         public string Id { get; set; }
         public string Project { get; set; }
-        public Breadcrumb BreadCrumb { get; set; }
+        public Breadcrumb Breadcrumb { get; set; }
         public string Environment { get; set; }
         public IEnumerable<GeofenceWebhookResult> Events { get; set; }
         public IEnumerable<KeyValuePair<string, string>> IntegrationMetadata { get; set; }
