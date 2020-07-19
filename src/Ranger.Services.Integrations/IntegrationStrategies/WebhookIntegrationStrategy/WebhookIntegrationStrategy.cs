@@ -40,11 +40,15 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
             try
             {
                 var result = await httpClient.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead);
-                logger.LogDebug("Received status code {StatusCode} from webhook integration", result.StatusCode);
+                logger.LogDebug("Received status code {StatusCode} from webhook integration {IntegrationId}", result.StatusCode, integration.IntegrationId);
+            }
+            catch (OperationCanceledException)
+            {
+                logger.LogDebug("The webhook integration {IntegrationId} request timed out", integration.IntegrationId);
             }
             catch (Exception ex)
             {
-                logger.LogError("Failed to execute webhook successfully - {Reason}", ex.Message);
+                logger.LogError("Failed to execute webhook integration {IntegrationId} successfully - {Reason}", ex.Message, integration.IntegrationId);
             }
         }
 
