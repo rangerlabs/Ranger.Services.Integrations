@@ -54,11 +54,11 @@ namespace Ranger.Services.Integrations
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                 });
 
-            services.AddWebhookIntegrationHttpClient();
+            services.AddRangerApiVersioning();
+            services.ConfigureAutoWrapperModelStateResponseFactory();
 
-            services.AddAutoWrapper();
+            services.AddWebhookIntegrationHttpClient();
             services.AddSwaggerGen("Integrations API", "v1");
-            services.AddApiVersioning(o => o.ApiVersionReader = new HeaderApiVersionReader("api-version"));
 
             services.AddDbContext<IntegrationsDbContext>((serviceProvider, options) =>
             {
