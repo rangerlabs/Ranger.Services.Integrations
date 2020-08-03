@@ -18,7 +18,6 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
     {
         private readonly ILogger<WebhookIntegrationStrategy> logger;
         private readonly IHttpClientFactory httpClientFactory;
-        private readonly HttpClient httpClient;
         private readonly string HeaderName = "x-ranger-signature";
 
         public WebhookIntegrationStrategy(ILogger<WebhookIntegrationStrategy> logger, IHttpClientFactory httpClientFactory)
