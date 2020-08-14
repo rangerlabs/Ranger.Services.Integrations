@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -18,9 +19,9 @@ namespace Ranger.Services.Integrations.Data
             this.logger = logger;
         }
 
-        public async Task<bool> GetIntegrationNameAvailableByProjectAsync(Guid projectId, string name)
+        public async Task<bool> GetIntegrationNameAvailableByProjectAsync(Guid projectId, string name, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return await this.context.IntegrationUniqueConstraints.AnyAsync(_ => _.ProjectId == projectId && _.Name == name);
+            return await this.context.IntegrationUniqueConstraints.AnyAsync(_ => _.ProjectId == projectId && _.Name == name, cancellationToken);
         }
     }
 }

@@ -46,6 +46,7 @@ namespace Ranger.Services.Integrations
             services.AddControllers(options =>
                 {
                     options.EnableEndpointRouting = false;
+                    options.Filters.Add<OperationCanceledExceptionFilter>();
                 })
                 .AddNewtonsoftJson(options =>
                 {

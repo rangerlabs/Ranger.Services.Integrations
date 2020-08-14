@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
@@ -87,7 +88,7 @@ namespace Ranger.Services.Integrations.Data
             }
         }
 
-        public async Task<IEnumerable<IDomainIntegration>> GetAllNotDeletedIntegrationsForProjectIds(IEnumerable<Guid> projectIds)
+        public async Task<IEnumerable<IDomainIntegration>> GetAllNotDeletedIntegrationsForProjectIds(IEnumerable<Guid> projectIds, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (projectIds is null)
             {
@@ -123,7 +124,7 @@ namespace Ranger.Services.Integrations.Data
                         FROM active_integrations ai, integration_streams i
                         WHERE i.stream_id = ai.stream_id
                         AND i.version = ai.version
-                        AND (i.data ->> 'ProjectId') IN ('{String.Join("','", projectIds)}')) AS integrationstreams").ToListAsync();
+                        AND (i.data ->> 'ProjectId') IN ('{String.Join("','", projectIds)}')) AS integrationstreams").ToListAsync(cancellationToken);
             var integrationVersionTuples = new List<IDomainIntegration>();
             foreach (var integrationStream in integrationStreams)
             {
@@ -138,7 +139,7 @@ namespace Ranger.Services.Integrations.Data
             return integrationVersionTuples;
         }
 
-        public async Task<IEnumerable<IDomainIntegration>> GetAllNotDeletedIntegrationsByIdsForProject(Guid projectId, IEnumerable<Guid> integrationIds)
+        public async Task<IEnumerable<IDomainIntegration>> GetAllNotDeletedIntegrationsByIdsForProject(Guid projectId, IEnumerable<Guid> integrationIds, CancellationToken cancellationToken = default(CancellationToken))
         {
             var integrationStreams = await this.context.IntegrationStreams
             .FromSqlRaw($@"
@@ -170,7 +171,7 @@ namespace Ranger.Services.Integrations.Data
                         i.inserted_by
                     FROM not_deleted i
                     WHERE (i.data ->> 'IntegrationId') IN ('{String.Join("','", integrationIds)}')
-                    ORDER BY i.stream_id, i.version DESC) AS integrationstreams").ToListAsync();
+                    ORDER BY i.stream_id, i.version DESC) AS integrationstreams").ToListAsync(cancellationToken);
             var integrationVersionTuples = new List<IDomainIntegration>();
             foreach (var integrationStream in integrationStreams)
             {
@@ -180,7 +181,7 @@ namespace Ranger.Services.Integrations.Data
             return integrationVersionTuples;
         }
 
-        public async Task<IEnumerable<(IDomainIntegration integration, IntegrationsEnum integrationType, int version)>> GetAllIntegrationsForProject(Guid projectId)
+        public async Task<IEnumerable<(IDomainIntegration integration, IntegrationsEnum integrationType, int version)>> GetAllIntegrationsForProject(Guid projectId, CancellationToken cancellationToken = default(CancellationToken))
         {
             var integrationStreams = await this.context.IntegrationStreams.
             FromSqlInterpolated($@"
@@ -211,7 +212,7 @@ namespace Ranger.Services.Integrations.Data
             		i.inserted_at,
             		i.inserted_by
                 FROM not_deleted i
-                ORDER BY i.stream_id, i.version DESC) AS integrationstreams").ToListAsync();
+                ORDER BY i.stream_id, i.version DESC) AS integrationstreams").ToListAsync(cancellationToken);
             var integrationVersionTuples = new List<(IDomainIntegration integration, IntegrationsEnum integrationType, int version)>();
             foreach (var integrationStream in integrationStreams)
             {
@@ -221,9 +222,9 @@ namespace Ranger.Services.Integrations.Data
             return integrationVersionTuples;
         }
 
-        public async Task<IDomainIntegration> GetNotDeletedIntegrationByIntegrationIdAsync(Guid projectId, Guid integrationId)
+        public async Task<IDomainIntegration> GetNotDeletedIntegrationByIntegrationIdAsync(Guid projectId, Guid integrationId, CancellationToken cancellationToken = default(CancellationToken))
         {
-            IntegrationStream integrationStream = await GetNotDeletedIntegrationStreamByIntegrationIdAsync(projectId, integrationId);
+            IntegrationStream integrationStream = await GetNotDeletedIntegrationStreamByIntegrationIdAsync(projectId, integrationId, cancellationToken);
 
             var integration = JsonToEntityFactory.Factory(integrationStream.IntegrationType, integrationStream.Data);
             return EntityToDomainFactory.Factory(integration, this.dataProtector);
@@ -393,7 +394,7 @@ namespace Ranger.Services.Integrations.Data
             }
         }
 
-        private async Task<IntegrationStream> GetNotDeletedIntegrationStreamByIntegrationIdAsync(Guid projectId, Guid integrationId)
+        private async Task<IntegrationStream> GetNotDeletedIntegrationStreamByIntegrationIdAsync(Guid projectId, Guid integrationId, CancellationToken cancellationToken = default(CancellationToken))
         {
             return await this.context.IntegrationStreams
             .FromSqlInterpolated($@"
@@ -425,7 +426,7 @@ namespace Ranger.Services.Integrations.Data
                     i.inserted_at,
                     i.inserted_by
                 FROM not_deleted i
-                ORDER BY i.stream_id, i.version DESC) AS integrationstream").FirstOrDefaultAsync();
+                ORDER BY i.stream_id, i.version DESC) AS integrationstream").FirstOrDefaultAsync(cancellationToken);
         }
 
         private async Task<IntegrationStream> GetNotDeletedIntegrationStreamByIntegrationNameAsync(Guid projectId, string name)
@@ -463,9 +464,9 @@ namespace Ranger.Services.Integrations.Data
                 ORDER BY i.stream_id, i.version DESC) AS integrationstream").FirstOrDefaultAsync();
         }
 
-        public async Task<IntegrationUniqueConstraint> GetIntegrationUniqueConstraintsByIntegrationIdAsync(Guid projectId, Guid integrationId)
+        public async Task<IntegrationUniqueConstraint> GetIntegrationUniqueConstraintsByIntegrationIdAsync(Guid projectId, Guid integrationId, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return await this.context.IntegrationUniqueConstraints.SingleOrDefaultAsync(_ => _.ProjectId == projectId && _.IntegrationId == integrationId);
+            return await this.context.IntegrationUniqueConstraints.SingleOrDefaultAsync(_ => _.ProjectId == projectId && _.IntegrationId == integrationId, cancellationToken);
         }
 
         private void AddIntegrationUniqueConstraints(IntegrationStream IntegrationStream, IIntegration integration)
