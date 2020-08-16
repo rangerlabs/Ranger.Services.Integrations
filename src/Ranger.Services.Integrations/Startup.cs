@@ -125,7 +125,6 @@ namespace Ranger.Services.Integrations
         public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime, ILoggerFactory loggerFactory)
         {
             this.loggerFactory = loggerFactory;
-            applicationLifetime.ApplicationStopping.Register(OnShutdown);
 
             app.UseSwagger("v1", "Integrations API");
             app.UseAutoWrapper();
@@ -145,7 +144,7 @@ namespace Ranger.Services.Integrations
                 endpoints.MapRabbitMQHealthCheck();
             });
 
-            this.busSubscriber = app.UseRabbitMQ()
+            this.busSubscriber = app.UseRabbitMQ(applicationLifetime)
                 .SubscribeCommand<InitializeTenant>((c, e) =>
                    new InitializeTenantRejected(e.Message, "")
                 )
@@ -160,11 +159,6 @@ namespace Ranger.Services.Integrations
                 )
                 .SubscribeCommand<ExecuteGeofenceIntegrations>()
                 .SubscribeCommand<EnforceIntegrationResourceLimits>();
-        }
-
-        private void OnShutdown()
-        {
-            this.busSubscriber.Dispose();
         }
     }
 }
