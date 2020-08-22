@@ -35,7 +35,7 @@ namespace Ranger.Services.Integrations.Handlers
 
             foreach (var integration in distinctIntegrations)
             {
-                var geofenceResults = message.GeofenceIntegrationResults.Where(gri => gri.IntegrationIds.Contains(integration.IntegrationId));
+                var geofenceResults = message.GeofenceIntegrationResults.Where(gri => gri.IntegrationIds.Contains(integration.Id));
                 await integrationExecutor.Execute(message.TenantId, message.ProjectName, integration, geofenceResults, message.Breadcrumb, message.Environment);
             }
         }

@@ -7,7 +7,7 @@ namespace Ranger.Services.Integrations.Data.DomainModels
 {
     public class DomainWebhookIntegration : IDomainIntegration
     {
-        public Guid IntegrationId { get; set; }
+        public Guid Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public Guid ProjectId { get; set; }

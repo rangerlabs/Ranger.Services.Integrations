@@ -61,7 +61,7 @@ namespace Ranger.Services.Integrations.Handlers
             {
                 var domainIntegration = JsonToDomainFactory.Factory(command.IntegrationType, command.MessageJsonContent);
                 entityIntegration = DomainToEntityFactory.Factory(domainIntegration, dataProtector);
-                entityIntegration.IntegrationId = Guid.NewGuid();
+                entityIntegration.Id = Guid.NewGuid();
                 entityIntegration.ProjectId = command.ProjectId;
             }
             catch (JsonSerializationException ex)
@@ -73,7 +73,7 @@ namespace Ranger.Services.Integrations.Handlers
             try
             {
                 await repo.AddIntegrationAsync(command.CommandingUserEmail, "IntegrationCreated", entityIntegration, command.IntegrationType);
-                busPublisher.Publish(new IntegrationCreated(command.TenantId, entityIntegration.Name, entityIntegration.IntegrationId), CorrelationContext.FromId(context.CorrelationContextId));
+                busPublisher.Publish(new IntegrationCreated(command.TenantId, entityIntegration.Name, entityIntegration.Id), CorrelationContext.FromId(context.CorrelationContextId));
             }
             catch (EventStreamDataConstraintException ex)
             {

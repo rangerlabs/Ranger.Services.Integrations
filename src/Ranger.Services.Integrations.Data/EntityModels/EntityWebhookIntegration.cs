@@ -7,7 +7,7 @@ namespace Ranger.Services.Integrations.Data.EntityModels
     public class EntityWebhookIntegration : IEntityIntegration
     {
         [Required]
-        public Guid IntegrationId { get; set; }
+        public Guid Id { get; set; }
         [Required]
         [StringLength(140)]
         public string Name { get; set; }

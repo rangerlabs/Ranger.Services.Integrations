@@ -261,7 +261,7 @@ namespace Ranger.Services.Integrations.Data
                     InsertedAt = DateTime.UtcNow,
                     InsertedBy = userEmail,
                 };
-                this.context.IntegrationUniqueConstraints.Remove(await this.context.IntegrationUniqueConstraints.Where(_ => _.IntegrationId == currentIntegration.IntegrationId).SingleAsync());
+                this.context.IntegrationUniqueConstraints.Remove(await this.context.IntegrationUniqueConstraints.Where(_ => _.IntegrationId == currentIntegration.Id).SingleAsync());
                 this.context.IntegrationStreams.Add(updatedIntegrationStream);
                 try
                 {
@@ -292,7 +292,7 @@ namespace Ranger.Services.Integrations.Data
             {
                 throw new ConcurrencyException($"After '{maxConcurrencyAttempts}' attempts, the version was still outdated. Too many updates have been applied in a short period of time. The current stream version is '{currentIntegrationStream.Version + 1}'. The integration was not deleted");
             }
-            return currentIntegration.IntegrationId;
+            return currentIntegration.Id;
         }
 
         public async Task UpdateIntegrationAsync(Guid projectId, string userEmail, string eventName, int version, IEntityIntegration integration)
@@ -310,10 +310,10 @@ namespace Ranger.Services.Integrations.Data
                 throw new ArgumentException($"{nameof(integration)} was null");
             }
 
-            var currentIntegrationStream = await this.GetNotDeletedIntegrationStreamByIntegrationIdAsync(projectId, integration.IntegrationId);
+            var currentIntegrationStream = await this.GetNotDeletedIntegrationStreamByIntegrationIdAsync(projectId, integration.Id);
             if (currentIntegrationStream is null)
             {
-                throw new RangerException($"No integration was found for ProjectId '{integration.ProjectId}' and Integration Id '{integration.IntegrationId}'");
+                throw new RangerException($"No integration was found for ProjectId '{integration.ProjectId}' and Integration Id '{integration.Id}'");
             }
             ValidateRequestVersionIncremented(version, currentIntegrationStream);
 
@@ -325,7 +325,7 @@ namespace Ranger.Services.Integrations.Data
             var serializedNewIntegrationData = JsonConvert.SerializeObject(integration);
             ValidateDataJsonInequality(currentIntegrationStream, serializedNewIntegrationData);
 
-            var uniqueConstraint = await this.GetIntegrationUniqueConstraintsByIntegrationIdAsync(projectId, integration.IntegrationId);
+            var uniqueConstraint = await this.GetIntegrationUniqueConstraintsByIntegrationIdAsync(projectId, integration.Id);
             uniqueConstraint.Name = integration.Name.ToLowerInvariant();
 
             var updatedIntegrationStream = new IntegrationStream()
@@ -473,7 +473,7 @@ namespace Ranger.Services.Integrations.Data
         {
             var newIntegrationUniqueConstraint = new IntegrationUniqueConstraint
             {
-                IntegrationId = integration.IntegrationId,
+                IntegrationId = integration.Id,
                 TenantId = contextTenant.TenantId,
                 ProjectId = integration.ProjectId,
                 Name = integration.Name.ToLowerInvariant(),
