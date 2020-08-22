@@ -66,6 +66,7 @@ namespace Ranger.Services.Integrations
             integration.Type = getIntegrationTypeFriendlyName(result.integrationType);
             foreach (var propertyInfo in result.integration.GetType().GetProperties().Where(_ => _.Name.ToLowerInvariant() != "deleted" || _.Name.ToLowerInvariant() != "environment"))
             {
+                logger.LogDebug("Mapping property {Property}", propertyInfo.Name);
                 ((IDictionary<String, Object>)integration).Add(propertyInfo.Name, propertyInfo.GetValue(result.integration));
             }
             integration.Environment = getIntegrationEnvironmentFriendlyName(result.integration.Environment);
