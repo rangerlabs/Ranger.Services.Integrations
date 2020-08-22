@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
@@ -48,11 +47,10 @@ namespace Ranger.Services.Integrations
                 var integrationsList = new List<dynamic>();
                 foreach (var result in integrationVersionTuples)
                 {
-                    dynamic integration = new ExpandoObject();
-                    mapIntegrationToDynamic(result, integration);
+                    var integration = mapIntegrationToDynamic(result);
                     integrationsList.Add(integration);
                 }
-                return new ApiResponse("Successfully retrived integrations", integrationsList);
+                return new ApiResponse("Successfully retrieved integrations", integrationsList);
             }
             catch (Exception ex)
             {
@@ -62,8 +60,9 @@ namespace Ranger.Services.Integrations
             }
         }
 
-        private void mapIntegrationToDynamic((IDomainIntegration integration, IntegrationsEnum integrationType, int version) result, dynamic integration)
+        private dynamic mapIntegrationToDynamic((IDomainIntegration integration, IntegrationsEnum integrationType, int version) result)
         {
+            dynamic integration = new ExpandoObject();
             integration.Type = getIntegrationTypeFriendlyName(result.integrationType);
             foreach (var propertyInfo in result.integration.GetType().GetProperties().Where(_ => _.Name.ToLowerInvariant() != "deleted" || _.Name.ToLowerInvariant() != "environment"))
             {
@@ -71,6 +70,7 @@ namespace Ranger.Services.Integrations
             }
             integration.Environment = getIntegrationEnvironmentFriendlyName(result.integration.Environment);
             integration.Version = result.version;
+            return integration;
         }
 
         ///<summary>

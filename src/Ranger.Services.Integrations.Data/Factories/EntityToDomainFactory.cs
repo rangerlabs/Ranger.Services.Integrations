@@ -25,7 +25,8 @@ namespace Ranger.Services.Integrations.Data
                             Enabled = e.Enabled,
                             Deleted = e.Deleted,
                             Url = e.Url,
-                            SigningKey = e.SigningKey
+                            SigningKey = e.SigningKey,
+                            CreatedOn = e.CreatedOn
                         };
                         var unprotectedHeaders = dataProtector.Unprotect(e.Headers);
                         var unprotectedMetadata = dataProtector.Unprotect(e.Metadata);
