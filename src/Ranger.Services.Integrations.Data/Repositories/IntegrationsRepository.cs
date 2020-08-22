@@ -157,7 +157,7 @@ namespace Ranger.Services.Integrations.Data
                             i.inserted_by
                         FROM integration_streams i, integration_unique_constraints iuc
                         WHERE iuc.project_id = '{projectId.ToString()}' 
-                        AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
+                        AND (i.data ->> 'Id') = iuc.integration_id::text
                     )
                     SELECT DISTINCT ON (i.stream_id) 
                         i.id,
@@ -170,7 +170,7 @@ namespace Ranger.Services.Integrations.Data
                         i.inserted_at,
                         i.inserted_by
                     FROM not_deleted i
-                    WHERE (i.data ->> 'IntegrationId') IN ('{String.Join("','", integrationIds)}')
+                    WHERE (i.data ->> 'Id') IN ('{String.Join("','", integrationIds)}')
                     ORDER BY i.stream_id, i.version DESC) AS integrationstreams").ToListAsync(cancellationToken);
             var integrationVersionTuples = new List<IDomainIntegration>();
             foreach (var integrationStream in integrationStreams)
@@ -199,7 +199,7 @@ namespace Ranger.Services.Integrations.Data
                             i.inserted_by
                         FROM integration_streams i, integration_unique_constraints iuc
                         WHERE iuc.project_id = {projectId} 
-                        AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
+                        AND (i.data ->> 'Id') = iuc.integration_id::text
                 )
                 SELECT DISTINCT ON (i.stream_id) 
                     i.id,
@@ -267,7 +267,7 @@ namespace Ranger.Services.Integrations.Data
                 {
                     await this.context.SaveChangesAsync();
                     deleted = true;
-                    logger.LogInformation($"Integration  {currentIntegration.Name} deleted");
+                    logger.LogInformation($"Integration {currentIntegration.Name} deleted");
                 }
                 catch (DbUpdateException ex)
                 {
@@ -413,7 +413,7 @@ namespace Ranger.Services.Integrations.Data
                         FROM integration_streams i, integration_unique_constraints iuc
                         WHERE iuc.project_id = {projectId} 
                         AND iuc.integration_id = {integrationId}
-                        AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
+                        AND (i.data ->> 'Id') = iuc.integration_id::text
                 )
                 SELECT DISTINCT ON (i.stream_id) 
                     i.id,
@@ -448,7 +448,7 @@ namespace Ranger.Services.Integrations.Data
                         FROM integration_streams i, integration_unique_constraints iuc
                         WHERE iuc.project_id = {projectId}
                         AND iuc.name = {name.ToLowerInvariant()}
-                        AND (i.data ->> 'IntegrationId') = iuc.integration_id::text
+                        AND (i.data ->> 'Id') = iuc.integration_id::text
                 )
                 SELECT DISTINCT ON (i.stream_id)      
                     i.id,
