@@ -25,7 +25,8 @@ namespace Ranger.Services.Integrations.Data
                             Deleted = d.Deleted,
                             Url = d.Url,
                             SigningKey = d.SigningKey,
-                            CreatedOn = d.CreatedOn
+                            CreatedOn = d.CreatedOn,
+                            IsDefault = d.IsDefault
                         };
                         var encodedHeaders = (JsonConvert.SerializeObject(d.Headers) ?? "[]").Base64Encode();
                         var encodedMetadata = (JsonConvert.SerializeObject(d.Metadata) ?? "[]").Base64Encode();
