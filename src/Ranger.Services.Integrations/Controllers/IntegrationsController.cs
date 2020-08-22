@@ -20,6 +20,7 @@ namespace Ranger.Services.Integrations
     [Authorize]
     public class IntegrationsController : ControllerBase
     {
+        private readonly string[] blacklistedProperties = new[] { "deleted", "environment" };
         private readonly Func<string, IntegrationsRepository> integrationsRepositoryFactory;
         private readonly ProjectsHttpClient projectsHttpClient;
         private readonly ILogger<IntegrationsController> logger;
@@ -64,7 +65,8 @@ namespace Ranger.Services.Integrations
         {
             dynamic integration = new ExpandoObject();
             integration.Type = getIntegrationTypeFriendlyName(result.integrationType);
-            foreach (var propertyInfo in result.integration.GetType().GetProperties().Where(_ => _.Name.ToLowerInvariant() != "deleted" || _.Name.ToLowerInvariant() != "environment"))
+            var propertiesToMap = result.integration.GetType().GetProperties().Where(_ => !blacklistedProperties.Contains(_.Name.ToLowerInvariant()));
+            foreach (var propertyInfo in propertiesToMap)
             {
                 logger.LogDebug("Mapping property {Property}", propertyInfo.Name);
                 ((IDictionary<String, Object>)integration).Add(propertyInfo.Name, propertyInfo.GetValue(result.integration));
