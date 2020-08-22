@@ -88,7 +88,7 @@ namespace Ranger.Services.Integrations
             var repo = integrationsRepositoryFactory(tenantId);
             try
             {
-                var allIntegrations = await repo.GetAllNotDeletedIntegrationsForProjectIds(projects.Result.Select(p => p.ProjectId));
+                var allIntegrations = await repo.GetAllNotDeletedIntegrationsForProjectIds(projects.Result.Select(p => p.Id));
                 return new ApiResponse("Successfully retrieved integrations", result: allIntegrations.Count());
             }
             catch (Exception ex)

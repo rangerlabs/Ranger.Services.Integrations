@@ -45,7 +45,7 @@ namespace Ranger.Services.Integrations.Handlers
 
             var limitsApiResponse = await subscriptionsHttpClient.GetSubscription<SubscriptionLimitDetails>(command.TenantId);
             var projectsApiResult = await projectsHttpClient.GetAllProjects<IEnumerable<Project>>(command.TenantId);
-            var allCurrentIntegrations = await repo.GetAllNotDeletedIntegrationsForProjectIds(projectsApiResult.Result.Select(p => p.ProjectId));
+            var allCurrentIntegrations = await repo.GetAllNotDeletedIntegrationsForProjectIds(projectsApiResult.Result.Select(p => p.Id));
             if (!limitsApiResponse.Result.Active)
             {
                 throw new RangerException("Subscription is inactive");

@@ -4,6 +4,6 @@ namespace Ranger.Services.Integrations
 {
     public class Project
     {
-        public Guid ProjectId { get; set; }
+        public Guid Id { get; set; }
     }
 }
