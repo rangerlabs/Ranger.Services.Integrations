@@ -63,7 +63,6 @@ namespace Ranger.Services.Integrations.Handlers
                 entityIntegration = DomainToEntityFactory.Factory(domainIntegration, dataProtector);
                 entityIntegration.IntegrationId = Guid.NewGuid();
                 entityIntegration.ProjectId = command.ProjectId;
-                entityIntegration.CreatedOn = DateTime.UtcNow;
             }
             catch (JsonSerializationException ex)
             {
