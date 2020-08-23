@@ -170,7 +170,7 @@ namespace Ranger.Services.Integrations.Data
                         i.inserted_at,
                         i.inserted_by
                     FROM not_deleted i
-                    WHERE (i.data ->> 'IsDefault') = true
+                    WHERE (i.data ->> 'IsDefault') = 'true'
                     ORDER BY i.stream_id, i.version DESC) AS integrationstreams").ToListAsync(cancellationToken);
             var integrationVersionTuples = new List<IDomainIntegration>();
             foreach (var integrationStream in integrationStreams)
