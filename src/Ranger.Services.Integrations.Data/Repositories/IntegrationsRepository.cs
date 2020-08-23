@@ -172,7 +172,7 @@ namespace Ranger.Services.Integrations.Data
                     FROM not_deleted i
                     ORDER BY i.stream_id, i.version DESC) AS integrationstreams
                 WHERE (data ->> 'IsDefault') = 'true'
-                AND (data ->> 'Environment' = '{environment.ToString()}'").ToListAsync(cancellationToken);
+                AND (data ->> 'Environment') = '{environment.ToString()}'").ToListAsync(cancellationToken);
             var integrationVersionTuples = new List<IDomainIntegration>();
             foreach (var integrationStream in integrationStreams)
             {
