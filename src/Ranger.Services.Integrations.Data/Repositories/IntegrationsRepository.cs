@@ -139,7 +139,7 @@ namespace Ranger.Services.Integrations.Data
             return integrationVersionTuples;
         }
 
-        public async Task<IEnumerable<IDomainIntegration>> GetAllNotDeletedDefaultIntegrationsForProject(Guid projectId, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<IEnumerable<IDomainIntegration>> GetAllNotDeletedDefaultIntegrationsByEnvironmentForProject(Guid projectId, EnvironmentEnum environment, CancellationToken cancellationToken = default(CancellationToken))
         {
             var integrationStreams = await this.context.IntegrationStreams
             .FromSqlRaw($@"
@@ -171,7 +171,8 @@ namespace Ranger.Services.Integrations.Data
                         i.inserted_by
                     FROM not_deleted i
                     ORDER BY i.stream_id, i.version DESC) AS integrationstreams
-                WHERE (data ->> 'IsDefault') = 'true'").ToListAsync(cancellationToken);
+                WHERE (data ->> 'IsDefault') = 'true'
+                AND (data ->> 'Environment' = '{environment.ToString()}'").ToListAsync(cancellationToken);
             var integrationVersionTuples = new List<IDomainIntegration>();
             foreach (var integrationStream in integrationStreams)
             {
