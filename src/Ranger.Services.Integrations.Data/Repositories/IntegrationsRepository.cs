@@ -170,8 +170,8 @@ namespace Ranger.Services.Integrations.Data
                         i.inserted_at,
                         i.inserted_by
                     FROM not_deleted i
-                    WHERE (i.data ->> 'IsDefault') = 'true'
-                    ORDER BY i.stream_id, i.version DESC) AS integrationstreams").ToListAsync(cancellationToken);
+                    ORDER BY i.stream_id, i.version DESC) AS integrationstreams
+                WHERE (data ->> 'IsDefault') = 'true'").ToListAsync(cancellationToken);
             var integrationVersionTuples = new List<IDomainIntegration>();
             foreach (var integrationStream in integrationStreams)
             {
@@ -212,8 +212,8 @@ namespace Ranger.Services.Integrations.Data
                         i.inserted_at,
                         i.inserted_by
                     FROM not_deleted i
-                    WHERE (i.data ->> 'Id') IN ('{String.Join("','", integrationIds)}')
-                    ORDER BY i.stream_id, i.version DESC) AS integrationstreams").ToListAsync(cancellationToken);
+                    ORDER BY i.stream_id, i.version DESC) AS integrationstreams
+                WHERE (data ->> 'Id') IN ('{String.Join("','", integrationIds)}')").ToListAsync(cancellationToken);
             var integrationVersionTuples = new List<IDomainIntegration>();
             foreach (var integrationStream in integrationStreams)
             {
