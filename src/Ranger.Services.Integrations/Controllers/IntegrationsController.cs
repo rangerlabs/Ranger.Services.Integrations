@@ -20,7 +20,7 @@ namespace Ranger.Services.Integrations
     [Authorize]
     public class IntegrationsController : ControllerBase
     {
-        private readonly string[] blacklistedProperties = new[] { "deleted", "environment", "isdefault" };
+        private readonly string[] blacklistedProperties = new[] { "deleted", "environment" };
         private readonly Func<string, IntegrationsRepository> integrationsRepositoryFactory;
         private readonly ProjectsHttpClient projectsHttpClient;
         private readonly ILogger<IntegrationsController> logger;

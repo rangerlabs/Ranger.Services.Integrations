@@ -9,8 +9,9 @@ namespace Ranger.Services.Integrations
         public string TenantId { get; }
         public string Name { get; }
         public Guid Id { get; }
+        public bool IsDefault { get; }
 
-        public IntegrationUpdated(string tenantId, string name, Guid id)
+        public IntegrationUpdated(string tenantId, string name, Guid id, bool isDefault)
         {
             if (string.IsNullOrWhiteSpace(tenantId))
             {
@@ -24,6 +25,7 @@ namespace Ranger.Services.Integrations
             this.TenantId = tenantId;
             this.Name = name;
             this.Id = id;
+            this.IsDefault = isDefault;
         }
     }
 }

@@ -139,6 +139,48 @@ namespace Ranger.Services.Integrations.Data
             return integrationVersionTuples;
         }
 
+        public async Task<IEnumerable<IDomainIntegration>> GetAllNotDeletedDefaultIntegrationsForProject(Guid projectId, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            var integrationStreams = await this.context.IntegrationStreams
+            .FromSqlRaw($@"
+                SELECT * FROM (
+                    WITH not_deleted AS(
+                        SELECT 
+                            i.id,
+                            i.tenant_id,
+                            i.stream_id,
+                            i.version,
+                            i.data,
+                            i.integration_type,
+                            i.event,
+                            i.inserted_at,
+                            i.inserted_by
+                        FROM integration_streams i, integration_unique_constraints iuc
+                        WHERE iuc.project_id = '{projectId.ToString()}' 
+                        AND (i.data ->> 'Id') = iuc.integration_id::text
+                    )
+                    SELECT DISTINCT ON (i.stream_id) 
+                        i.id,
+                        i.tenant_id,
+                        i.stream_id,
+                        i.version,
+                        i.data,
+                        i.integration_type,
+                        i.event,
+                        i.inserted_at,
+                        i.inserted_by
+                    FROM not_deleted i
+                    WHERE (i.data ->> 'IsDefault') = true
+                    ORDER BY i.stream_id, i.version DESC) AS integrationstreams").ToListAsync(cancellationToken);
+            var integrationVersionTuples = new List<IDomainIntegration>();
+            foreach (var integrationStream in integrationStreams)
+            {
+                var integration = JsonToEntityFactory.Factory(integrationStream.IntegrationType, integrationStream.Data);
+                integrationVersionTuples.Add((EntityToDomainFactory.Factory(integration, this.dataProtector)));
+            }
+            return integrationVersionTuples;
+        }
+
         public async Task<IEnumerable<IDomainIntegration>> GetAllNotDeletedIntegrationsByIdsForProject(Guid projectId, IEnumerable<Guid> integrationIds, CancellationToken cancellationToken = default(CancellationToken))
         {
             var integrationStreams = await this.context.IntegrationStreams

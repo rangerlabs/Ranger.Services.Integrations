@@ -47,7 +47,7 @@ namespace Ranger.Services.Integrations.Handlers
             try
             {
                 await repo.UpdateIntegrationAsync(command.ProjectId, command.CommandingUserEmail, "IntegrationUpdated", command.Version, entityIntegration);
-                busPublisher.Publish(new IntegrationUpdated(command.TenantId, entityIntegration.Name, entityIntegration.Id), CorrelationContext.FromId(context.CorrelationContextId));
+                busPublisher.Publish(new IntegrationUpdated(command.TenantId, entityIntegration.Name, entityIntegration.Id, entityIntegration.IsDefault), CorrelationContext.FromId(context.CorrelationContextId));
             }
             catch (EventStreamDataConstraintException ex)
             {
