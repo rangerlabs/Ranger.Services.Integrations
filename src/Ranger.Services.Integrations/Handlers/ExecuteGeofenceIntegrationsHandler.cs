@@ -27,7 +27,7 @@ namespace Ranger.Services.Integrations.Handlers
             logger.LogInformation("Executing integrations. {@Message}", message);
             var repo = integrationsRepository.Invoke(message.TenantId);
 
-            var defaultIntegrationIds = (await repo.GetAllNotDeletedDefaultIntegrationsByEnvironmentForProject(message.ProjectId, message.Environment)).Select(i => i.Id);
+            var defaultIntegrationIds = (await repo.GetAllNotDeletedDefaultIntegrationsForProject(message.ProjectId, message.Environment)).Where(i => i.Environment == message.Environment).Select(i => i.Id);
             logger.LogDebug("Determined default integrations to be {DefaultIntegrationIds}", defaultIntegrationIds);
 
             var distinctIntegrationIds = message.GeofenceIntegrationResults.SelectMany(_ => _.IntegrationIds).Distinct();
