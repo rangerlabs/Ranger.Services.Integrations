@@ -122,18 +122,14 @@ namespace Ranger.Services.Integrations
             builder.AddRabbitMq();
         }
 
-        public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime)
         {
-            this.loggerFactory = loggerFactory;
-
             app.UseSwagger("v1", "Integrations API");
             app.UseAutoWrapper();
-
+            app.UseUnhandedExceptionLogger();
             app.UseRouting();
-
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
@@ -143,7 +139,6 @@ namespace Ranger.Services.Integrations
                 endpoints.MapDockerImageTagHealthCheck();
                 endpoints.MapRabbitMQHealthCheck();
             });
-
             this.busSubscriber = app.UseRabbitMQ(applicationLifetime)
                 .SubscribeCommand<InitializeTenant>((c, e) =>
                    new InitializeTenantRejected(e.Message, "")
