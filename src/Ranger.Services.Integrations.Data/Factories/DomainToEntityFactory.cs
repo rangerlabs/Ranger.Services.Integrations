@@ -16,7 +16,7 @@ namespace Ranger.Services.Integrations.Data
                     {
                         var entityIntegration = new EntityWebhookIntegration
                         {
-                            IntegrationId = d.IntegrationId,
+                            Id = d.Id,
                             ProjectId = d.ProjectId,
                             Name = d.Name,
                             Environment = d.Environment,
@@ -24,7 +24,9 @@ namespace Ranger.Services.Integrations.Data
                             Enabled = d.Enabled,
                             Deleted = d.Deleted,
                             Url = d.Url,
-                            SigningKey = d.SigningKey
+                            SigningKey = d.SigningKey,
+                            CreatedOn = d.CreatedOn,
+                            IsDefault = d.IsDefault
                         };
                         var encodedHeaders = (JsonConvert.SerializeObject(d.Headers) ?? "[]").Base64Encode();
                         var encodedMetadata = (JsonConvert.SerializeObject(d.Metadata) ?? "[]").Base64Encode();

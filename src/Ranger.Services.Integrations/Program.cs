@@ -17,7 +17,7 @@ namespace Ranger.Services.Integrations
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -34,7 +34,7 @@ namespace Ranger.Services.Integrations
                 var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
 
                 dbInitializer.Migrate();
-                dbInitializer.EnsureRowLevelSecurityApplied();
+                await dbInitializer.EnsureRowLevelSecurityApplied();
             }
             host.Run();
         }

@@ -37,7 +37,7 @@ namespace Ranger.Services.Integrations.Handlers
                     foreach (var projectToRemove in integrationsToRemove)
                     {
                         await repo.SoftDeleteAsync(projectToRemove.ProjectId, "SubscriptionEnforcer", projectToRemove.Name);
-                        busPublisher.Send(new PurgeIntegrationFromGeofences(tenantLimit.tenantId, projectToRemove.ProjectId, projectToRemove.IntegrationId), context);
+                        busPublisher.Send(new PurgeIntegrationFromGeofences(tenantLimit.tenantId, projectToRemove.ProjectId, projectToRemove.Id), context);
                     }
                 }
             }

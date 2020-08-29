@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using Ranger.RabbitMQ;
 using Ranger.Services.Integrations.Data;
 
@@ -28,15 +27,30 @@ namespace Ranger.Services.Integrations.Handlers
             logger.LogInformation("Executing integrations. {@Message}", message);
             var repo = integrationsRepository.Invoke(message.TenantId);
 
+            var defaultIntegrationIds = (await repo.GetAllNotDeletedDefaultIntegrationsForProject(message.ProjectId, message.Environment)).Where(i => i.Environment == message.Environment).Select(i => i.Id);
+            logger.LogDebug("Determined default integrations to be {DefaultIntegrationIds}", defaultIntegrationIds);
+
             var distinctIntegrationIds = message.GeofenceIntegrationResults.SelectMany(_ => _.IntegrationIds).Distinct();
             logger.LogDebug("Determined distinct integrations to be {DistinctIntegrationIds}", distinctIntegrationIds);
 
-            var distinctIntegrations = await repo.GetAllNotDeletedIntegrationsByIdsForProject(message.ProjectId, distinctIntegrationIds);
+            var integrationIdsToExecute = defaultIntegrationIds.Union(distinctIntegrationIds);
 
-            foreach (var integration in distinctIntegrations)
+            var integrationsToExecute = await repo.GetAllNotDeletedIntegrationsByIdsForProject(message.ProjectId, integrationIdsToExecute);
+
+            foreach (var integration in integrationsToExecute)
             {
-                var geofenceResults = message.GeofenceIntegrationResults.Where(gri => gri.IntegrationIds.Contains(integration.IntegrationId));
-                await integrationExecutor.Execute(message.TenantId, message.ProjectName, integration, geofenceResults, message.Breadcrumb, message.Environment);
+                logger.LogDebug("Executing integration {IntegrationId}", integration.Id);
+                if (integration.IsDefault)
+                {
+                    logger.LogDebug("{IntegrationId} is a default integration, executing for all GeofenceIntegrationResults");
+                    await integrationExecutor.Execute(message.TenantId, message.ProjectName, integration, message.GeofenceIntegrationResults, message.Breadcrumb, message.Environment);
+                }
+                else
+                {
+                    logger.LogDebug("{IntegrationId} is not a default integration, executing select GeofenceIntegrationResults");
+                    var geofenceResults = message.GeofenceIntegrationResults.Where(gri => gri.IntegrationIds.Contains(integration.Id));
+                    await integrationExecutor.Execute(message.TenantId, message.ProjectName, integration, geofenceResults, message.Breadcrumb, message.Environment);
+                }
             }
         }
     }

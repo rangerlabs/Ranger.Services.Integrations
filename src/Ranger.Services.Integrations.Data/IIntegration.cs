@@ -5,8 +5,9 @@ namespace Ranger.Services.Integrations.Data
 {
     public interface IIntegration
     {
-        Guid IntegrationId { get; set; }
+        Guid Id { get; set; }
         EnvironmentEnum Environment { get; set; }
+        bool IsDefault { get; set; }
         string Name { get; set; }
         string Description { get; set; }
         Guid ProjectId { get; set; }

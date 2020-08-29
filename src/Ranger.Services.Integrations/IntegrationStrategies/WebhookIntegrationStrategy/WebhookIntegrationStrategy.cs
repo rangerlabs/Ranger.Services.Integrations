@@ -18,7 +18,6 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
     {
         private readonly ILogger<WebhookIntegrationStrategy> logger;
         private readonly IHttpClientFactory httpClientFactory;
-        private readonly HttpClient httpClient;
         private readonly string HeaderName = "x-ranger-signature";
 
         public WebhookIntegrationStrategy(ILogger<WebhookIntegrationStrategy> logger, IHttpClientFactory httpClientFactory)
@@ -29,7 +28,7 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
 
         public async Task Execute(string tenantId, string projectName, DomainWebhookIntegration integration, IEnumerable<GeofenceIntegrationResult> geofenceIntegrationResults, Breadcrumb breadcrumb, EnvironmentEnum environment)
         {
-            logger.LogInformation("Executing Webhook Integration Strategy for integration {Integration} in project {Project}", integration.IntegrationId, projectName);
+            logger.LogInformation("Executing Webhook Integration Strategy for integration {Integration} in project {Project}", integration.Id, projectName);
             var httpClient = httpClientFactory.CreateClient(WebhookExtensions.HttpClientName);
             var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, integration.Url);
 
@@ -40,15 +39,15 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
             try
             {
                 var result = await httpClient.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead);
-                logger.LogDebug("Received status code {StatusCode} from webhook integration {IntegrationId}", result.StatusCode, integration.IntegrationId);
+                logger.LogDebug("Received status code {StatusCode} from webhook integration {IntegrationId}", result.StatusCode, integration.Id);
             }
             catch (OperationCanceledException)
             {
-                logger.LogDebug("The webhook integration {IntegrationId} request timed out", integration.IntegrationId);
+                logger.LogDebug("The webhook integration {IntegrationId} request timed out", integration.Id);
             }
             catch (Exception ex)
             {
-                logger.LogError("Failed to execute webhook integration {IntegrationId} successfully - {Reason}", ex.Message, integration.IntegrationId);
+                logger.LogError("Failed to execute webhook integration {IntegrationId} successfully - {Reason}", ex.Message, integration.Id);
             }
         }
 

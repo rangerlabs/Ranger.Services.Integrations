@@ -46,6 +46,7 @@ namespace Ranger.Services.Integrations
             services.AddControllers(options =>
                 {
                     options.EnableEndpointRouting = false;
+                    options.Filters.Add<OperationCanceledExceptionFilter>();
                 })
                 .AddNewtonsoftJson(options =>
                 {
@@ -54,11 +55,11 @@ namespace Ranger.Services.Integrations
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
                 });
 
-            services.AddWebhookIntegrationHttpClient();
+            services.AddRangerApiVersioning();
+            services.ConfigureAutoWrapperModelStateResponseFactory();
 
-            services.AddAutoWrapper();
+            services.AddWebhookIntegrationHttpClient();
             services.AddSwaggerGen("Integrations API", "v1");
-            services.AddApiVersioning(o => o.ApiVersionReader = new HeaderApiVersionReader("api-version"));
 
             services.AddDbContext<IntegrationsDbContext>((serviceProvider, options) =>
             {
@@ -121,19 +122,14 @@ namespace Ranger.Services.Integrations
             builder.AddRabbitMq();
         }
 
-        public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime)
         {
-            this.loggerFactory = loggerFactory;
-            applicationLifetime.ApplicationStopping.Register(OnShutdown);
-
             app.UseSwagger("v1", "Integrations API");
             app.UseAutoWrapper();
-
+            app.UseUnhandedExceptionLogger();
             app.UseRouting();
-
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
@@ -143,7 +139,6 @@ namespace Ranger.Services.Integrations
                 endpoints.MapDockerImageTagHealthCheck();
                 endpoints.MapRabbitMQHealthCheck();
             });
-
             this.busSubscriber = app.UseRabbitMQ()
                 .SubscribeCommand<InitializeTenant>((c, e) =>
                    new InitializeTenantRejected(e.Message, "")
@@ -159,11 +154,6 @@ namespace Ranger.Services.Integrations
                 )
                 .SubscribeCommand<ExecuteGeofenceIntegrations>()
                 .SubscribeCommand<EnforceIntegrationResourceLimits>();
-        }
-
-        private void OnShutdown()
-        {
-            this.busSubscriber.Dispose();
         }
     }
 }

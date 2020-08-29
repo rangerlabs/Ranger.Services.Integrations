@@ -17,7 +17,7 @@ namespace Ranger.Services.Integrations.Data
                     {
                         var domainIntegration = new DomainWebhookIntegration
                         {
-                            IntegrationId = e.IntegrationId,
+                            Id = e.Id,
                             ProjectId = e.ProjectId,
                             Name = e.Name,
                             Environment = e.Environment,
@@ -25,7 +25,9 @@ namespace Ranger.Services.Integrations.Data
                             Enabled = e.Enabled,
                             Deleted = e.Deleted,
                             Url = e.Url,
-                            SigningKey = e.SigningKey
+                            SigningKey = e.SigningKey,
+                            CreatedOn = e.CreatedOn,
+                            IsDefault = e.IsDefault
                         };
                         var unprotectedHeaders = dataProtector.Unprotect(e.Headers);
                         var unprotectedMetadata = dataProtector.Unprotect(e.Metadata);

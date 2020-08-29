@@ -6,7 +6,6 @@ services:
         ports:
             - '8087:8087'
         networks:
-            - integrations
             - ranger
 
 networks:
@@ -14,6 +13,3 @@ networks:
         name: ranger-network
         external: true
 
-    integrations:
-        name: integrations-network
-        external: true

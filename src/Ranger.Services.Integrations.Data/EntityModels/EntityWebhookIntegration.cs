@@ -7,7 +7,7 @@ namespace Ranger.Services.Integrations.Data.EntityModels
     public class EntityWebhookIntegration : IEntityIntegration
     {
         [Required]
-        public Guid IntegrationId { get; set; }
+        public Guid Id { get; set; }
         [Required]
         [StringLength(140)]
         public string Name { get; set; }
@@ -24,6 +24,7 @@ namespace Ranger.Services.Integrations.Data.EntityModels
         public string Metadata { get; set; }
         public bool Enabled { get; set; } = true;
         public bool Deleted { get; set; } = false;
+        public bool IsDefault { get; set; } = false;
         public DateTime CreatedOn { get; set; }
     }
 }
