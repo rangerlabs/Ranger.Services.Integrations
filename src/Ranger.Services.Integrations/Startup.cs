@@ -32,8 +32,6 @@ namespace Ranger.Services.Integrations
     {
         private readonly IWebHostEnvironment Environment;
         private readonly IConfiguration configuration;
-        private ILoggerFactory loggerFactory;
-        private IBusSubscriber busSubscriber;
 
         public Startup(IWebHostEnvironment environment, IConfiguration configuration)
         {
@@ -139,21 +137,21 @@ namespace Ranger.Services.Integrations
                 endpoints.MapDockerImageTagHealthCheck();
                 endpoints.MapRabbitMQHealthCheck();
             });
-            this.busSubscriber = app.UseRabbitMQ()
-                .SubscribeCommand<InitializeTenant>((c, e) =>
+            app.UseRabbitMQ()
+                .SubscribeCommandWithHandler<InitializeTenant>((c, e) =>
                    new InitializeTenantRejected(e.Message, "")
                 )
-                .SubscribeCommand<CreateIntegration>((c, e) =>
+                .SubscribeCommandWithHandler<CreateIntegration>((c, e) =>
                     new CreateIntegrationRejected(e.Message, "")
                 )
-                .SubscribeCommand<UpdateIntegration>((c, e) =>
+                .SubscribeCommandWithHandler<UpdateIntegration>((c, e) =>
                     new UpdateIntegrationRejected(e.Message, "")
                 )
-                .SubscribeCommand<DeleteIntegration>((c, e) =>
+                .SubscribeCommandWithHandler<DeleteIntegration>((c, e) =>
                     new DeleteIntegrationRejected(e.Message, "")
                 )
-                .SubscribeCommand<ExecuteGeofenceIntegrations>()
-                .SubscribeCommand<EnforceIntegrationResourceLimits>();
+                .SubscribeCommandWithHandler<ExecuteGeofenceIntegrations>()
+                .SubscribeCommandWithHandler<EnforceIntegrationResourceLimits>();
         }
     }
 }
