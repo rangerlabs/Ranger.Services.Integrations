@@ -78,12 +78,21 @@ namespace Ranger.Services.Integrations
 
                     options.RequireHttpsMetadata = false;
                 });
-
-            services.AddDataProtection()
-                .SetApplicationName("Integrations")
-                .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
-                .UnprotectKeysWithAnyCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
-                .PersistKeysToDbContext<IntegrationsDbContext>();
+            // Workaround for MAC validation issues on MacOS
+            if (configuration.IsIntegrationTesting())
+            {
+                services.AddDataProtection()
+                   .SetApplicationName("Integrations")
+                   .PersistKeysToDbContext<IntegrationsDbContext>();
+            }
+            else
+            {
+                services.AddDataProtection()
+                    .SetApplicationName("Integrations")
+                    .ProtectKeysWithCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
+                    .UnprotectKeysWithAnyCertificate(new X509Certificate2(configuration["DataProtectionCertPath:Path"]))
+                    .PersistKeysToDbContext<IntegrationsDbContext>();
+            }
 
             services.AddLiveHealthCheck();
             services.AddEntityFrameworkHealthCheck<IntegrationsDbContext>();
