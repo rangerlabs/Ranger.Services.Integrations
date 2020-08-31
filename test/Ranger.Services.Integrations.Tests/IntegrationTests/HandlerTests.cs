@@ -19,9 +19,7 @@ namespace Ranger.Services.Integrations.Tests
         }
 
         [Fact]
-        public Task ApiGatway_Starts()
-        {
-            return Task.CompletedTask;
-        }
+        public void Integrations_Starts()
+        { }
     }
 }
