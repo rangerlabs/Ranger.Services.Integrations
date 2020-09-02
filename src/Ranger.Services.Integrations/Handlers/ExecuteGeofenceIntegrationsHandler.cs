@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Ranger.RabbitMQ;
+using Ranger.RabbitMQ.BusPublisher;
 using Ranger.Services.Integrations.Data;
 
 namespace Ranger.Services.Integrations.Handlers

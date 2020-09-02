@@ -55,9 +55,7 @@ namespace Ranger.Services.Integrations
             services.AddDbContext<IntegrationsDbContext>((serviceProvider, options) =>
             {
                 options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
-            },
-                ServiceLifetime.Transient
-            );
+            });
 
             var identityAuthority = configuration["httpClient:identityAuthority"];
             services.AddPollyPolicyRegistry();

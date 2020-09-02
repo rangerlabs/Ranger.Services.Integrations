@@ -5,6 +5,7 @@ using Ranger.Common;
 using Ranger.Common.Data.Exceptions;
 using Ranger.InternalHttpClient;
 using Ranger.RabbitMQ;
+using Ranger.RabbitMQ.BusPublisher;
 using Ranger.Services.Integrations.Data;
 
 namespace Ranger.Services.Integrations.Handlers

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ranger.Common;
 using Ranger.RabbitMQ;
+using Ranger.RabbitMQ.BusPublisher;
 using Ranger.Services.Integrations.Data;
 
 namespace Ranger.Services.Integrations
