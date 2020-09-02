@@ -22,10 +22,10 @@ namespace Ranger.Services.Integrations
     {
         private readonly string[] blacklistedProperties = new[] { "deleted", "environment" };
         private readonly Func<string, IntegrationsRepository> integrationsRepositoryFactory;
-        private readonly ProjectsHttpClient projectsHttpClient;
+        private readonly IProjectsHttpClient projectsHttpClient;
         private readonly ILogger<IntegrationsController> logger;
 
-        public IntegrationsController(Func<string, IntegrationsRepository> integrationsRepositoryFactory, ProjectsHttpClient projectsHttpClient, ILogger<IntegrationsController> logger)
+        public IntegrationsController(Func<string, IntegrationsRepository> integrationsRepositoryFactory, IProjectsHttpClient projectsHttpClient, ILogger<IntegrationsController> logger)
         {
             this.integrationsRepositoryFactory = integrationsRepositoryFactory;
             this.projectsHttpClient = projectsHttpClient;

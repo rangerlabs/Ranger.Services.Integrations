@@ -20,15 +20,15 @@ namespace Ranger.Services.Integrations.Handlers
     {
         private readonly IBusPublisher busPublisher;
         private readonly Func<string, IntegrationsRepository> integrationsRepository;
-        private readonly SubscriptionsHttpClient subscriptionsHttpClient;
-        private readonly ProjectsHttpClient projectsHttpClient;
+        private readonly ISubscriptionsHttpClient subscriptionsHttpClient;
+        private readonly IProjectsHttpClient projectsHttpClient;
         private readonly ILogger<CreateIntegrationHandler> logger;
         private readonly IDataProtector dataProtector;
 
         public CreateIntegrationHandler(IBusPublisher busPublisher,
                                         Func<string, IntegrationsRepository> integrationsRepository,
-                                        SubscriptionsHttpClient subscriptionsHttpClient,
-                                        ProjectsHttpClient projectsHttpClient,
+                                        ISubscriptionsHttpClient subscriptionsHttpClient,
+                                        IProjectsHttpClient projectsHttpClient,
                                         ILogger<CreateIntegrationHandler> logger,
                                         IDataProtectionProvider dataProtectionProvider)
         {
