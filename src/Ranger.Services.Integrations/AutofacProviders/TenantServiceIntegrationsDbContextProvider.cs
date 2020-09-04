@@ -53,7 +53,7 @@ namespace Ranger.Services.Integrations
             {
                 logger.LogDebug("Utilizing cached tenant password");
                 connectionBuilder.Password = redisValue;
-                contextTenant = new ContextTenant(tenantDbKey, redisValue, true);
+                contextTenant = new ContextTenant(tenantId, redisValue, true);
             }
 
             var options = new DbContextOptionsBuilder<T>();
