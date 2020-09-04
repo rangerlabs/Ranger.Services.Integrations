@@ -105,18 +105,18 @@ namespace Ranger.Services.Integrations
         {
             builder.RegisterInstance<CloudSqlOptions>(configuration.GetOptions<CloudSqlOptions>("cloudSql"));
             builder.RegisterType<IntegrationsDbContext>().InstancePerDependency();
-            builder.RegisterType<TenantServiceDbContext>();
+            builder.RegisterType<TenantServiceDbContextProvider>();
             builder.RegisterType<WebhookIntegrationStrategy>().InstancePerDependency();
             builder.RegisterType<IntegrationStrategyExecutor>().InstancePerDependency();
             builder.Register((c, p) =>
             {
-                var provider = c.Resolve<TenantServiceDbContext>();
+                var provider = c.Resolve<TenantServiceDbContextProvider>();
                 var (dbContextOptions, model) = provider.GetDbContextOptions<IntegrationsDbContext>(p.TypedAs<string>());
                 return new IntegrationUniqueConstraintRepository(model, new IntegrationsDbContext(dbContextOptions), c.Resolve<ILogger<IntegrationUniqueConstraintRepository>>());
             });
             builder.Register((c, p) =>
             {
-                var provider = c.Resolve<TenantServiceDbContext>();
+                var provider = c.Resolve<TenantServiceDbContextProvider>();
                 var (dbContextOptions, model) = provider.GetDbContextOptions<IntegrationsDbContext>(p.TypedAs<string>());
                 return new IntegrationsRepository(model, new IntegrationsDbContext(dbContextOptions), c.Resolve<ILogger<IntegrationsRepository>>(), c.Resolve<IDataProtectionProvider>());
             });
