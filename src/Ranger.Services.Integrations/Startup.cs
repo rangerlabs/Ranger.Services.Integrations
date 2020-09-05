@@ -58,7 +58,7 @@ namespace Ranger.Services.Integrations
                 options.UseNpgsql(configuration["cloudSql:ConnectionString"]);
             });
 
-            services.AddRedis(configuration["redis:ConnectionString"]);
+            services.AddRedis(configuration["redis:ConnectionString"], out _);
 
             var identityAuthority = configuration["httpClient:identityAuthority"];
             services.AddPollyPolicyRegistry();
