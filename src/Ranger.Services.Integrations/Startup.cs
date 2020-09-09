@@ -120,7 +120,7 @@ namespace Ranger.Services.Integrations
                 var (dbContextOptions, model) = provider.GetDbContextOptions<IntegrationsDbContext>(p.TypedAs<string>());
                 return new IntegrationsRepository(model, new IntegrationsDbContext(dbContextOptions), c.Resolve<ILogger<IntegrationsRepository>>(), c.Resolve<IDataProtectionProvider>());
             });
-            builder.AddRabbitMq<Startup, IntegrationsDbContext>();
+            builder.AddRabbitMqWithOutbox<Startup, IntegrationsDbContext>();
         }
 
         public void Configure(IApplicationBuilder app, IHostApplicationLifetime applicationLifetime)
