@@ -2,10 +2,11 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Ranger.Common;
+using Ranger.RabbitMQ;
 
 namespace Ranger.Services.Integrations.Data
 {
-    public class IntegrationsDbContext : DbContext, IDataProtectionKeyContext
+    public class IntegrationsDbContext : DbContext, IDataProtectionKeyContext, IOutboxStore
     {
 
         public delegate IntegrationsDbContext Factory(DbContextOptions<IntegrationsDbContext> options);
@@ -19,6 +20,7 @@ namespace Ranger.Services.Integrations.Data
         public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
         public DbSet<IntegrationStream> IntegrationStreams { get; set; }
         public DbSet<IntegrationUniqueConstraint> IntegrationUniqueConstraints { get; set; }
+        public DbSet<OutboxMessage> Outbox { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
