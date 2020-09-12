@@ -20,7 +20,8 @@ namespace Ranger.Services.Integrations.Data
         public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
         public DbSet<IntegrationStream> IntegrationStreams { get; set; }
         public DbSet<IntegrationUniqueConstraint> IntegrationUniqueConstraints { get; set; }
-        public DbSet<OutboxMessage> Outbox { get; set; }
+        public DbSet<OutboxMessage> OutboxMessages { get; set; }
+        public DbSet<RangerRabbitMessage> RangerRabbitMessages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
