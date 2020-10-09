@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -14,7 +13,7 @@ using Ranger.Services.Integrations.Data.DomainModels;
 
 namespace Ranger.Services.Integrations.IntegrationStrategies
 {
-    public class WebhookIntegrationStrategy : IIntegrationStrategy
+    public class WebhookIntegrationStrategy : IIntegrationStrategy<DomainWebhookIntegration>
     {
         private readonly ILogger<WebhookIntegrationStrategy> logger;
         private readonly IHttpClientFactory httpClientFactory;

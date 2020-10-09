@@ -18,6 +18,11 @@ namespace Ranger.Services.Integrations.Data
                         webhookIntegration.SigningKey = Crypto.GenerateSudoRandomAlphaNumericString(64);
                         return webhookIntegration;
                     }
+                case IntegrationsEnum.PUSHER:
+                    {
+                        var pusherIntegration = JsonConvert.DeserializeObject<DomainPusherIntegration>(jsonContent, new JsonSerializerSettings { MissingMemberHandling = MissingMemberHandling.Ignore });
+                        return pusherIntegration;
+                    }
                 default:
                     {
                         throw new ArgumentException($"No Integration Type associated with '{integrationType}'");

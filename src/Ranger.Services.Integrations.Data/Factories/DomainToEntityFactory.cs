@@ -34,6 +34,28 @@ namespace Ranger.Services.Integrations.Data
                         entityIntegration.Metadata = dataProtector.Protect(encodedMetadata);
                         return entityIntegration;
                     }
+                    case DomainPusherIntegration d:
+                    {
+                        var entityIntegration = new EntityPusherIntegration
+                        {
+                            Id = d.Id,
+                            ProjectId = d.ProjectId,
+                            Name = d.Name,
+                            Environment = d.Environment,
+                            Description = d.Description,
+                            Enabled = d.Enabled,
+                            Deleted = d.Deleted,
+                            AppId = d.AppId,
+                            Key = d.Key,
+                            Secret = d.Secret,
+                            Cluster = d.Cluster,
+                            CreatedOn = d.CreatedOn,
+                            IsDefault = d.IsDefault
+                        };
+                        var encodedMetadata = (JsonConvert.SerializeObject(d.Metadata) ?? "[]").Base64Encode();
+                        entityIntegration.Metadata = dataProtector.Protect(encodedMetadata);
+                        return entityIntegration;
+                    }
                 default:
                     {
                         throw new ArgumentException($"No Integration Type associated with '{domainIntegration.GetType()}'");

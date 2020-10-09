@@ -15,6 +15,10 @@ namespace Ranger.Services.Integrations.Data
                     {
                         return typeof(EntityWebhookIntegration);
                     }
+                case IntegrationsEnum.PUSHER:
+                    {
+                        return typeof(EntityPusherIntegration);
+                    }
                 default:
                     {
                         throw new ArgumentException($"No Integration Type associated with '{integrationType}'");

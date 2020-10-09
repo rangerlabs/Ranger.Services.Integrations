@@ -16,6 +16,10 @@ namespace Ranger.Services.Integrations.Data
                     {
                         return JsonConvert.DeserializeObject<EntityWebhookIntegration>(jsonContent, new JsonSerializerSettings { MissingMemberHandling = MissingMemberHandling.Error });
                     }
+                case IntegrationsEnum.PUSHER:
+                    {
+                        return JsonConvert.DeserializeObject<EntityPusherIntegration>(jsonContent, new JsonSerializerSettings { MissingMemberHandling = MissingMemberHandling.Error });
+                    }
                 default:
                     {
                         throw new ArgumentException($"No Integration Type associated with '{integrationType}'");

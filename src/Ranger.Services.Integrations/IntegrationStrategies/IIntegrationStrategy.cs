@@ -6,8 +6,9 @@ using Ranger.Services.Integrations.Data.DomainModels;
 
 namespace Ranger.Services.Integrations
 {
-    public interface IIntegrationStrategy
+    public interface IIntegrationStrategy<TDomainIntegration>
+    where TDomainIntegration : IDomainIntegration
     {
-        Task Execute(string tenantId, string projectName, DomainWebhookIntegration integration, IEnumerable<GeofenceIntegrationResult> geofenceIntegrationResult, Breadcrumb breadcrumb, EnvironmentEnum environment);
+        Task Execute(string tenantId, string projectName, TDomainIntegration integration, IEnumerable<GeofenceIntegrationResult> geofenceIntegrationResult, Breadcrumb breadcrumb, EnvironmentEnum environment);
     }
 }
