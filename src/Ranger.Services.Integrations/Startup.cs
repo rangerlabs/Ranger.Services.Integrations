@@ -107,6 +107,7 @@ namespace Ranger.Services.Integrations
             builder.RegisterType<IntegrationsDbContext>().InstancePerDependency();
             builder.RegisterType<TenantServiceDbContextProvider>();
             builder.RegisterType<WebhookIntegrationStrategy>().InstancePerDependency();
+            builder.RegisterType<PusherIntegrationStrategy>().InstancePerDependency();
             builder.RegisterType<IntegrationStrategyExecutor>().InstancePerDependency();
             builder.Register((c, p) =>
             {
