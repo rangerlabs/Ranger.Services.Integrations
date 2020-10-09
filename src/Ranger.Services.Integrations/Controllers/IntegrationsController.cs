@@ -105,6 +105,7 @@ namespace Ranger.Services.Integrations
             return integration switch
             {
                 IntegrationsEnum.WEBHOOK => "Webhook",
+                IntegrationsEnum.PUSHER => "Pusher",
                 _ => throw new ArgumentException($"Invalid integration type {integration}")
             };
         }
