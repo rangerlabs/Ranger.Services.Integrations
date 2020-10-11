@@ -46,7 +46,7 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
        }
 
         private static PusherIntegrationContent GetPusherIntegrationContent(string projectName, DomainPusherIntegration integration, IEnumerable<GeofenceIntegrationResult> geofenceIntegrationResults, Breadcrumb breadcrumb, EnvironmentEnum environment)
-        {
+        {   
             return new PusherIntegrationContent
             {
                 id = Guid.NewGuid().ToString("N"),
@@ -55,19 +55,32 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
                 breadcrumb = new PusherBreadcrumb {
                     deviceId = breadcrumb.DeviceId,
                     externalUserId = breadcrumb.ExternalUserId,
-                    position = breadcrumb.Position,
+                    position = new PusherLngLat {
+                        lng= breadcrumb.Position.Lng,
+                        lat = breadcrumb.Position.Lat
+                    },
                     accuracy = breadcrumb.Accuracy,
                     recordedAt = breadcrumb.RecordedAt,
                     acceptedAt = breadcrumb.AcceptedAt,
-                    metadata = breadcrumb.Metadata
+                    metadata = mapMetadata(breadcrumb.Metadata)
                 },
                 events = geofenceIntegrationResults.Select(g => new GeofencePusherResult(g.GeofenceId,
                     g.GeofenceExternalId,
                     g.GeofenceDescription,
-                    g.GeofenceMetadata,
+                    mapMetadata(g.GeofenceMetadata),
                     g.GeofenceEvent)),
-                integrationMetadata = integration.Metadata,
+                integrationMetadata = mapMetadata(integration.Metadata),
             };
+        }
+
+        private static IEnumerable<PusherKeyValuePair> mapMetadata(IEnumerable<KeyValuePair<string, string>> metadata)
+        {
+            var pusherKeyValues = new List<PusherKeyValuePair>();
+            foreach(var kvp in metadata)
+            {
+                pusherKeyValues.Add(new PusherKeyValuePair{key = kvp.Key, value = kvp.Value});
+            }
+            return pusherKeyValues;
         }
     }
 }
