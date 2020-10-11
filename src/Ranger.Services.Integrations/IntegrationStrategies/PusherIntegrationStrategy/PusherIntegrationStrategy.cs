@@ -49,16 +49,24 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
         {
             return new PusherIntegrationContent
             {
-                Id = Guid.NewGuid().ToString("N"),
-                Project = projectName,
-                Environment = Enum.GetName(typeof(EnvironmentEnum), environment),
-                Breadcrumb = breadcrumb,
-                Events = geofenceIntegrationResults.Select(g => new GeofencePusherResult(g.GeofenceId,
+                id = Guid.NewGuid().ToString("N"),
+                project = projectName,
+                environment = Enum.GetName(typeof(EnvironmentEnum), environment),
+                breadcrumb = new PusherBreadcrumb {
+                    deviceId = breadcrumb.DeviceId,
+                    externalUserId = breadcrumb.ExternalUserId,
+                    position = breadcrumb.Position,
+                    accuracy = breadcrumb.Accuracy,
+                    recordedAt = breadcrumb.RecordedAt,
+                    acceptedAt = breadcrumb.AcceptedAt,
+                    metadata = breadcrumb.Metadata
+                },
+                events = geofenceIntegrationResults.Select(g => new GeofencePusherResult(g.GeofenceId,
                     g.GeofenceExternalId,
                     g.GeofenceDescription,
                     g.GeofenceMetadata,
                     g.GeofenceEvent)),
-                IntegrationMetadata = integration.Metadata,
+                integrationMetadata = integration.Metadata,
             };
         }
     }

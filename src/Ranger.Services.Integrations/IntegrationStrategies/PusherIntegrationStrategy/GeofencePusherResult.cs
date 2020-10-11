@@ -8,17 +8,17 @@ namespace Ranger.Services.Integrations
     {
         public GeofencePusherResult(Guid geofenceId, string geofenceExternalId, string geofenceDescription, IEnumerable<KeyValuePair<string, string>> geofenceMetadata, GeofenceEventEnum geofenceEvent)
         {
-            this.GeofenceId = geofenceId;
-            this.GeofenceExternalId = geofenceExternalId;
-            this.GeofenceDescription = geofenceDescription;
-            this.GeofenceMetadata = geofenceMetadata;
-            this.GeofenceEvent = Enum.GetName(typeof(GeofenceEventEnum), geofenceEvent);
+            this.geofenceId = geofenceId;
+            this.geofenceExternalId = geofenceExternalId;
+            this.geofenceDescription = geofenceDescription;
+            this.geofenceMetadata = geofenceMetadata;
+            this.geofenceEvent = Enum.GetName(typeof(GeofenceEventEnum), geofenceEvent);
         }
 
-        public Guid GeofenceId { get; }
-        public string GeofenceExternalId { get; }
-        public string GeofenceDescription { get; }
-        public IEnumerable<KeyValuePair<string, string>> GeofenceMetadata { get; }
-        public string GeofenceEvent { get; }
+        public Guid geofenceId { get; }
+        public string geofenceExternalId { get; }
+        public string geofenceDescription { get; }
+        public IEnumerable<KeyValuePair<string, string>> geofenceMetadata { get; }
+        public string geofenceEvent { get; }
     }
 }
