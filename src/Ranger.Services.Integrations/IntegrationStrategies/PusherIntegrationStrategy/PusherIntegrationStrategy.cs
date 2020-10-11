@@ -31,14 +31,8 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
                 var result = await pusher.TriggerAsync(
                     $"ranger-{breadcrumb.DeviceId}",
                     "ranger-geofence-event",
-                    JsonConvert.SerializeObject(content, new JsonSerializerSettings
-                    {
-                        ContractResolver = new DefaultContractResolver
-                        {
-                            NamingStrategy = new CamelCaseNamingStrategy()
-                        }
-                    })
-                );
+                    content
+               );
                 logger.LogDebug("Received status code {StatusCode} from Pusher integration {IntegrationId}", result.StatusCode, integration.Id);
             }
             catch (OperationCanceledException)
