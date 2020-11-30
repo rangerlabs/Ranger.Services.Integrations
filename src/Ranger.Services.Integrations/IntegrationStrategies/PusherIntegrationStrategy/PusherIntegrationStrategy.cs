@@ -41,7 +41,7 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
             }
             catch (Exception ex)
             {
-                logger.LogError("Failed to execute webhook integration {IntegrationId} successfully - {Reason}", ex.Message, integration.Id);
+                logger.LogError(ex, "Failed to execute pusher integration {IntegrationId} successfully", integration.Id);
             }
        }
 
