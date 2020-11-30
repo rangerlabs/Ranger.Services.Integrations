@@ -26,7 +26,7 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
             logger.LogInformation("Executing Pusher Integration Strategy for integration {Integration} in project {Project}", integration.Id, projectName);
             try
             {
-                var pusher = new Pusher(integration.AppId, integration.Key, integration.Secret, new PusherOptions { Cluster = integration.Cluster});
+                var pusher = new Pusher(integration.AppId, integration.Key, integration.Secret, new PusherOptions { Cluster = integration.Cluster });
                 var content = GetPusherIntegrationContent(projectName, integration, geofenceIntegrationResults, breadcrumb, environment);
                 var result = await pusher.TriggerAsync(
                     $"ranger-{breadcrumb.DeviceId}",
@@ -43,20 +43,22 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
             {
                 logger.LogError(ex, "Failed to execute pusher integration {IntegrationId} successfully", integration.Id);
             }
-       }
+        }
 
         private static PusherIntegrationContent GetPusherIntegrationContent(string projectName, DomainPusherIntegration integration, IEnumerable<GeofenceIntegrationResult> geofenceIntegrationResults, Breadcrumb breadcrumb, EnvironmentEnum environment)
-        {   
+        {
             return new PusherIntegrationContent
             {
                 id = Guid.NewGuid().ToString("N"),
                 project = projectName,
                 environment = Enum.GetName(typeof(EnvironmentEnum), environment),
-                breadcrumb = new PusherBreadcrumb {
+                breadcrumb = new PusherBreadcrumb
+                {
                     deviceId = breadcrumb.DeviceId,
                     externalUserId = breadcrumb.ExternalUserId,
-                    position = new PusherLngLat {
-                        lng= breadcrumb.Position.Lng,
+                    position = new PusherLngLat
+                    {
+                        lng = breadcrumb.Position.Lng,
                         lat = breadcrumb.Position.Lat
                     },
                     accuracy = breadcrumb.Accuracy,
@@ -76,9 +78,9 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
         private static IEnumerable<PusherKeyValuePair> mapMetadata(IEnumerable<KeyValuePair<string, string>> metadata)
         {
             var pusherKeyValues = new List<PusherKeyValuePair>();
-            foreach(var kvp in metadata)
+            foreach (var kvp in metadata ?? Enumerable.Empty<KeyValuePair<string, string>>())
             {
-                pusherKeyValues.Add(new PusherKeyValuePair{key = kvp.Key, value = kvp.Value});
+                pusherKeyValues.Add(new PusherKeyValuePair { key = kvp.Key, value = kvp.Value });
             }
             return pusherKeyValues;
         }
