@@ -6,7 +6,7 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
 {
     public class WebhookIntegrationContent
     {
-        public string Id { get; set; }
+        public Guid Id { get; set; }
         public string Project { get; set; }
         public string Environment { get; set; }
         public Breadcrumb Breadcrumb { get; set; }

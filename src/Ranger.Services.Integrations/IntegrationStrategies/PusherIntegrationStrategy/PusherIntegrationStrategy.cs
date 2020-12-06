@@ -49,7 +49,7 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
         {
             return new PusherIntegrationContent
             {
-                id = Guid.NewGuid().ToString("N"),
+                id = Guid.NewGuid(),
                 project = projectName,
                 environment = Enum.GetName(typeof(EnvironmentEnum), environment),
                 breadcrumb = new PusherBreadcrumb

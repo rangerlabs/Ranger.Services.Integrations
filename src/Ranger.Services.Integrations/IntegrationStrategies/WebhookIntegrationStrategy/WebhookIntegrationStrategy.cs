@@ -46,7 +46,7 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to execute webhook integration {IntegrationId} successfully",  integration.Id);
+                logger.LogError(ex, "Failed to execute webhook integration {IntegrationId} successfully", integration.Id);
             }
         }
 
@@ -81,7 +81,7 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
         {
             return new WebhookIntegrationContent
             {
-                Id = Guid.NewGuid().ToString("N"),
+                Id = Guid.NewGuid(),
                 Project = projectName,
                 Environment = Enum.GetName(typeof(EnvironmentEnum), environment),
                 Breadcrumb = breadcrumb,
@@ -97,7 +97,7 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
         private void SignWebhookRequest(HttpRequestMessage httpRequestMessage, WebhookIntegrationContent content, string signingKey)
         {
             using var sha1 = new HMACSHA1(Encoding.UTF8.GetBytes(signingKey));
-            var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(content.Id));
+            var hash = sha1.ComputeHash(Encoding.UTF8.GetBytes(content.Id.ToString()));
             httpRequestMessage.Headers.Add(HeaderName, BitConverter.ToString(hash));
         }
     }
