@@ -84,7 +84,16 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
                 Id = Guid.NewGuid(),
                 Project = projectName,
                 Environment = Enum.GetName(typeof(EnvironmentEnum), environment),
-                Breadcrumb = breadcrumb,
+                Breadcrumb = new BreadcrumbWithoutId
+                {
+                    DeviceId = breadcrumb.DeviceId,
+                    ExternalUserId = breadcrumb.ExternalUserId,
+                    Position = breadcrumb.Position,
+                    Accuracy = breadcrumb.Accuracy,
+                    RecordedAt = breadcrumb.RecordedAt,
+                    AcceptedAt = breadcrumb.AcceptedAt,
+                    Metadata = breadcrumb.Metadata
+                },
                 Events = geofenceIntegrationResults.Select(g => new GeofenceWebhookResult(g.GeofenceId,
                     g.GeofenceExternalId,
                     g.GeofenceDescription,

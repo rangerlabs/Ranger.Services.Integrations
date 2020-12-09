@@ -9,12 +9,12 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
         public Guid id { get; set; }
         public string project { get; set; }
         public string environment { get; set; }
-        public PusherBreadcrumb breadcrumb { get; set; }
+        public PusherBreadcrumbWithoutId breadcrumb { get; set; }
         public IEnumerable<GeofencePusherResult> events { get; set; }
         public IEnumerable<PusherKeyValuePair> integrationMetadata { get; set; }
     }
 
-    public class PusherBreadcrumb
+    public class PusherBreadcrumbWithoutId
     {
         public string deviceId { get; set; }
         public string externalUserId { get; set; }

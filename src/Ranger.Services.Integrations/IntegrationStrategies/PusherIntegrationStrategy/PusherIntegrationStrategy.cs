@@ -52,7 +52,7 @@ namespace Ranger.Services.Integrations.IntegrationStrategies
                 id = Guid.NewGuid(),
                 project = projectName,
                 environment = Enum.GetName(typeof(EnvironmentEnum), environment),
-                breadcrumb = new PusherBreadcrumb
+                breadcrumb = new PusherBreadcrumbWithoutId
                 {
                     deviceId = breadcrumb.DeviceId,
                     externalUserId = breadcrumb.ExternalUserId,
